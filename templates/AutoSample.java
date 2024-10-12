@@ -75,7 +75,7 @@ public class AutoSample extends OpMode
                     * 250047.0 / 4913.0 // This is the exact gear ratio of the 50.9:1 Yellow Jacket gearbox
                     * 100.0 / 20.0 // This is the external gear reduction, a 20T pinion gear that drives a 100T hub-mount gear
                     * 1/360.0; // we want ticks per degree, not per rotation
-    //arm position variables
+    //arm position variables(to be use for armToPosition in your code)
     final double ARM_COLLAPSED_INTO_ROBOT  = 0;
     final double ARM_COLLECT               = 250 * ARM_TICKS_PER_DEGREE;
     final double ARM_CLEAR_BARRIER         = 230 * ARM_TICKS_PER_DEGREE;
@@ -210,6 +210,31 @@ public class AutoSample extends OpMode
                 telemetry.update();
             }
         }
+    }
+    
+    //arm function
+    public double[] armToPosition(double arm, double wristPos, double intakeSpeed){
+        //set arm motor target position
+        armMotor.setTargetPosition(arm);
+        //run arm motor to position
+        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //If the wrist pos passed in is greater than 8.333, then reset it to 8.333.
+        //This is to prevent the servo from jaming itself against the arm and burning
+        //out due to a bad value being passed in.
+        if (wristPos<=8.333){
+            //If value is within range
+            wrist.setPosition(wristPos);
+        }
+        else if (wristPos<3.333){
+            //If value is out of range in the negative direction
+            wrist.setPosition(0);
+        }
+        else{
+            //If value is out of range in the positive direction
+            wrist.setPosition(8.333);
+        }
+        //set intake power/speed
+        intake.setPower(intakeSpeed);
     }
     
     //Drive Function
