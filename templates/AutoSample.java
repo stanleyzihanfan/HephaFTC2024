@@ -173,16 +173,18 @@ public class AutoSample extends OpMode
         or not to have the function directly write the values the motors)
         Also the function will always return a double list with all of the motor speeds.*/
         mecanumDrive(0, 0, 0.5, true);
-        //reset runtime
-        runtime.reset();
-        while(runtime.seconds()>1.0){
-            //this while loop is only here to have the code wait for the amount of time.
-            /*There is no need to put anything here(unless you want to use telemetry and log
-            the progress, as shown below)*/
-            telemetry.addData("Path", "%4.1f S Elapsed", runtime.seconds());
-            telemetry.update();
-            //Just comment out the above to not have the telemetry trigger.
-        }
+        waitForTime(3);
+        //The bottum section has been replaced by the waitForTime function
+        // //reset runtime
+        // runtime.reset();
+        // while(runtime.seconds()>1.0){
+        //     //this while loop is only here to have the code wait for the amount of time.
+        //     /*There is no need to put anything here(unless you want to use telemetry and log
+        //     the progress, as shown below)*/
+        //     telemetry.addData("Path", "%4.1f S Elapsed", runtime.seconds());
+        //     telemetry.update();
+        //     //Just comment out the above to not have the telemetry trigger.
+        // }
         //reset all motors to 0 speed
         mecanumDrive(0, 0, 0, true);
     }
@@ -193,6 +195,21 @@ public class AutoSample extends OpMode
     @Override
     public void loop() {
         assert true;
+    }
+    
+    //Wait Function
+    //This is only here for the sake of not writing a for loop every time you need to wait.
+    public void waitForTime(double seconds){
+        //reset runtime
+        runtime.reset();
+        //wait untill runtime exeeds time limit
+        while(runtime.seconds()>=seconds){
+            //update telemtry
+            if (telemetryList.length>0){
+                telemetry.addData("Path","%4.1f S Elapsed",runtime.seconds());
+                telemetry.update();
+            }
+        }
     }
     
     //Drive Function

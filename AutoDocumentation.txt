@@ -1,4 +1,4 @@
-This is the documentation for the AutoSample programm functions
+This is the documentation for the AutoSample program functions
 Note that this is a work in progress.
 
 The drive function:
@@ -10,3 +10,8 @@ strafe is a double value between -1.0 and 1.0, negative corresponds to left, pos
 twist is a double value between -1.0 and 1.0, negative corresponds to counter-clockwise(left), positive corresponds to clockwise(right)
 apply is a boolean value, true applies the movement values to the robot directly, false only returns a double list of motor speeds.
 
+The Wait function:
+Name:waitForTime
+Description: Uses runtime to make the program pause for a specified amount of seconds.
+Usage: waitForTime(seconds)
+seconds is the double value of the amount of time to wait in seconds.
