@@ -1,0 +1,12 @@
+This is the documentation for the AutoSample programm functions
+Note that this is a work in progress.
+
+The drive function:
+Name: mecanumDrive
+Description: Moves the drive base of robot
+Usage: mecanumDrive(drive,strafe,twist,apply)
+drive is a double value between -1.0 and 1.0, negative corresponds to forward, positive corresponds to backward
+strafe is a double value between -1.0 and 1.0, negative corresponds to left, positive corresponds to right
+twist is a double value between -1.0 and 1.0, negative corresponds to counter-clockwise(left), positive corresponds to clockwise(right)
+apply is a boolean value, true applies the movement values to the robot directly, false only returns a double list of motor speeds.
+
