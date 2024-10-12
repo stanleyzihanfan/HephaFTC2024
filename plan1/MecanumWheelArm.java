@@ -168,10 +168,10 @@ public class MecanumWheelArm extends LinearOpMode{
             telemetry.update();
             
             double[] speeds = {
-                (drive + strafe + twist),
-                (drive - strafe - twist),
-                (drive - strafe + twist),
-                (drive + strafe - twist)
+                (drive + strafe + twist), //forward-left motor(wheel_0)
+                (drive - strafe - twist), //forward-right motor(wheel_1)
+                (drive - strafe + twist), //back-left motor(wheel_2)
+                (drive + strafe - twist)  //back-right motor(wheel_3)
             };
             
             // Loop through all values in the speeds[] array and find the greatest
