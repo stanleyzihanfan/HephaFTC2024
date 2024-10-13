@@ -203,7 +203,7 @@ public class AutoSample extends OpMode
         //reset runtime
         runtime.reset();
         //wait untill runtime exeeds time limit
-        while(runtime.seconds()>=seconds){
+        while(runtime.seconds()<=seconds){
             //update telemtry
             telemetry.addData("Path","%4.1f S Elapsed",runtime.seconds());
             telemetry.update();
