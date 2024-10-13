@@ -184,14 +184,7 @@ public class AutoSample extends OpMode
             armToPosition(armPosition, wristPosition, intakeSpeed);
         }
         //wait for 3 seconds
-        runtime.reset();
-        while(runtime.seconds()<=3){
-            //update telemtry
-            telemetry.addData("Time","%4.1f S Elapsed",runtime.seconds());
-            telemetry.update();
-            //run armToPosition(the arm motor needs to be constantly ran)
-            armToPosition(armPosition, wristPosition, intakeSpeed);
-        }
+        waitForTime(3);
         //set arm position to starting position
         armPosition=(int)ARM_COLLAPSED_INTO_ROBOT;
     }
@@ -215,6 +208,8 @@ public class AutoSample extends OpMode
             //update telemtry
             telemetry.addData("Time","%4.1f S Elapsed",runtime.seconds());
             telemetry.update();
+            //Constantly call the armToPosition function.
+            armToPosition(armPosition, wristPosition, intakeSpeed);
         }
     }
     
