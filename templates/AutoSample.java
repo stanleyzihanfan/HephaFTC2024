@@ -205,15 +205,13 @@ public class AutoSample extends OpMode
         //wait untill runtime exeeds time limit
         while(runtime.seconds()>=seconds){
             //update telemtry
-            if (telemetryList.length>0){
-                telemetry.addData("Path","%4.1f S Elapsed",runtime.seconds());
-                telemetry.update();
-            }
+            telemetry.addData("Path","%4.1f S Elapsed",runtime.seconds());
+            telemetry.update();
         }
     }
     
     //arm function
-    public double[] armToPosition(double arm, double wristPos, double intakeSpeed){
+    public double[] armToPosition(int arm, double wristPos, double intakeSpeed){
         //set arm motor target position
         armMotor.setTargetPosition(arm);
         //run arm motor to position
@@ -253,7 +251,9 @@ public class AutoSample extends OpMode
         // Loop through all values in the speeds[] array and find the greatest magnitude.
         double max = Math.abs(speeds[0]);
         for(int i = 0; i < speeds.length; i++) {
-            if ( max < Math.abs(speeds[i]) ) max = Math.abs(speeds[i]);
+            if ( max < Math.abs(speeds[i]) ) {
+                max = Math.abs(speeds[i]);
+            }
         }
         //if max is greater than 1, normalize all values to between 0 and 1.
         if(max>1){
