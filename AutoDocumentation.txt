@@ -25,4 +25,5 @@ wristPos is position of wrist(the function will reset the values if they are too
 intakeSpeed is speed of intake
 All of the servos only accept a values between 0 and 1.
 The encoder for the motor gets larger the more you rotate(it dosn't reset to 0 unless you do it in the code)
-The motor value is an int.
+All intake values are double values, but you need to change the motor input to int using this:
+armPosition=(int)MotorIncoderValue

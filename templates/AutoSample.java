@@ -92,8 +92,8 @@ public class AutoSample extends OpMode
     final double FUDGE_FACTOR = 15 * ARM_TICKS_PER_DEGREE;
     //variables used to set the arm to a specific position.
     double armPosition = (int)ARM_COLLAPSED_INTO_ROBOT;
-    double armPositionFudgeFactor;
-    
+    double wristPosition = WRIST_FOLDED_IN;
+    double intakeSpeed = INTAKE_OFF;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -166,27 +166,34 @@ public class AutoSample extends OpMode
         //be sure to use telemetry and log all variables for debugging!
         
         
-        //sample of rotating robot by time
-        //time is how long it rotates for
-        time=1.0;
+        //sample of rotating robot by time, then raising and lowering the arm.
         /*trigger drive function(the values are: drive,strafe,turn, and whether
         or not to have the function directly write the values the motors)
         Also the function will always return a double list with all of the motor speeds.*/
         mecanumDrive(0, 0, 0.5, true);
+        //wait 3 seconds
         waitForTime(3);
-        //The bottum section has been replaced by the waitForTime function
-        // //reset runtime
-        // runtime.reset();
-        // while(runtime.seconds()>1.0){
-        //     //this while loop is only here to have the code wait for the amount of time.
-        //     /*There is no need to put anything here(unless you want to use telemetry and log
-        //     the progress, as shown below)*/
-        //     telemetry.addData("Path", "%4.1f S Elapsed", runtime.seconds());
-        //     telemetry.update();
-        //     //Just comment out the above to not have the telemetry trigger.
-        // }
         //reset all motors to 0 speed
         mecanumDrive(0, 0, 0, true);
+        //wait 1 second
+        waitForTime(1);
+        //set arm position to vertical
+        armPosition=(int)ARM_ATTACH_HANGING_HOOK;
+        //wait untill the motor runs to the desired position
+        while (armMotor.getCurrentPosition()!=armPosition){
+            armToPosition(armPosition, wristPosition, intakeSpeed);
+        }
+        //wait for 3 seconds
+        runtime.reset();
+        while(runtime.seconds()<=3){
+            //update telemtry
+            telemetry.addData("Time","%4.1f S Elapsed",runtime.seconds());
+            telemetry.update();
+            //run armToPosition(the arm motor needs to be constantly ran)
+            armToPosition(armPosition, wristPosition, intakeSpeed);
+        }
+        //set arm position to starting position
+        armPosition=(int)ARM_COLLAPSED_INTO_ROBOT;
     }
 
     /*
@@ -194,7 +201,8 @@ public class AutoSample extends OpMode
      */
     @Override
     public void loop() {
-        assert true;
+        //Constantly set the arm positions, as the arm motor requires this to operate properly
+        armToPosition(armPosition, wristPosition, intakeSpeed);
     }
     
     //Wait Function
@@ -205,17 +213,24 @@ public class AutoSample extends OpMode
         //wait untill runtime exeeds time limit
         while(runtime.seconds()<=seconds){
             //update telemtry
-            telemetry.addData("Path","%4.1f S Elapsed",runtime.seconds());
+            telemetry.addData("Time","%4.1f S Elapsed",runtime.seconds());
             telemetry.update();
         }
     }
     
     //arm function
-    public double[] armToPosition(int arm, double wristPos, double intakeSpeed){
+    public void armToPosition(double armPos, double wristPos, double intakeSpeed){
         //set arm motor target position
-        armMotor.setTargetPosition(arm);
+        armMotor.setTargetPosition((int)(armPos));
+        //set motor velocity
+        ((DcMotorEx) armMotor).setVelocity(2100);
         //run arm motor to position
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //telemetry if motor exceeded current limit
+        if (((DcMotorEx) armMotor).isOverCurrent()){
+            telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
+        }
+        telemetry.update();
         //If the wrist pos passed in is greater than 8.333, then reset it to 8.333.
         //This is to prevent the servo from jaming itself against the arm and burning
         //out due to a bad value being passed in.
