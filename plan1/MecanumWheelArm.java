@@ -45,7 +45,20 @@ public class MecanumWheelArm extends LinearOpMode{
     //variables used to set the arm to a specific position.
     double armPosition = (int)ARM_COLLAPSED_INTO_ROBOT;
     double armPositionFudgeFactor;
+    //variable for if arm is out or not
     boolean armOveride = false;
+    //variable for if wrist is out or not(true is in, false is out)
+    boolean wristLocation=true;
+    //varaibles for wrist
+    //change wristShift to change how fast the wrist moves.
+    final double wristShift = 0.05;
+    double wristPos=WRIST_FOLDED_OUT;
+    double wristmove;
+    //Change the constant to change how fast the arms moves during manual
+    final double armShift=5*ARM_TICKS_PER_DEGREE;
+    //Variables to make joystick presses not trigger constantly
+    boolean leftStickPressed=false;
+    boolean rightStickPressed=false;
     
     //main loop
     @Override
@@ -93,10 +106,12 @@ public class MecanumWheelArm extends LinearOpMode{
                 intake.setPower(INTAKE_DEPOSIT);
             }
             if (!armOveride){
+                telemetry.addData("Manual:","Off");
                 //arm positions
                 if(gamepad2.right_bumper){
                     /* This is the intaking/collecting arm position */
                     armPosition = ARM_COLLECT;
+                    wristLocation=true;
                     wrist.setPosition(WRIST_FOLDED_OUT);
                     intake.setPower(INTAKE_COLLECT);
                     }
@@ -112,6 +127,8 @@ public class MecanumWheelArm extends LinearOpMode{
                     else if (gamepad2.y){
                         /* This is the correct height to score the sample in the LOW BASKET */
                         armPosition = ARM_SCORE_SAMPLE_IN_LOW;
+                        wristLocation=false;
+                        wrist.setPosition(WRIST_FOLDED_OUT);
                     }
 
                     else if (gamepad2.dpad_left) {
@@ -119,12 +136,14 @@ public class MecanumWheelArm extends LinearOpMode{
                         back to folded inside the robot. This is also the starting configuration */
                         armPosition = ARM_COLLAPSED_INTO_ROBOT;
                         intake.setPower(INTAKE_OFF);
+                        wristLocation=true;
                         wrist.setPosition(WRIST_FOLDED_IN);
                     }
 
                     else if (gamepad2.dpad_right){
                         /* This is the correct height to score SPECIMEN on the HIGH CHAMBER */
                         armPosition = ARM_SCORE_SPECIMEN;
+                        wristLocation=true;
                         wrist.setPosition(WRIST_FOLDED_IN);
                     }
 
@@ -132,6 +151,7 @@ public class MecanumWheelArm extends LinearOpMode{
                         /* This sets the arm to vertical to hook onto the LOW RUNG for hanging */
                         armPosition = ARM_ATTACH_HANGING_HOOK;
                         intake.setPower(INTAKE_OFF);
+                        wristLocation=true;
                         wrist.setPosition(WRIST_FOLDED_IN);
                     }
 
@@ -139,35 +159,80 @@ public class MecanumWheelArm extends LinearOpMode{
                         /* this moves the arm down to lift the robot up once it has been hooked */
                         armPosition = ARM_WINCH_ROBOT;
                         intake.setPower(INTAKE_OFF);
+                        wristLocation=true;
                         wrist.setPosition(WRIST_FOLDED_IN);
                     }
                     //Swap to manual
-                    else if (gamepad2.left_stick_button){
+                    else if (gamepad2.right_stick_button && !rightStickPressed){
                         armOveride=true;
+                        rightStickPressed=true;
                     }
-                    else if (gamepad2.right_stick_button){
-                        wrist.setPosition(WRIST_FOLDED_OUT);
+                    //set wrist to opposite position
+                    else if (gamepad2.left_stick_button && !leftStickPressed){
+                        if (wristLocation){
+                            wrist.setPosition(WRIST_FOLDED_IN);
+                            wristLocation=false;
+                        }
+                        else if (!wristLocation){
+                            wrist.setPosition(WRIST_FOLDED_OUT);
+                            wristLocation=true;
+                        }
+                        leftStickPressed=true;
+                    }
+                    if (!gamepad2.left_stick_button){
+                        leftStickPressed=false;
+                    }
+                    if (!gamepad2.right_stick_button){
+                        rightStickPressed=false;
                     }
                 }
+                //Manual code
                 else{
-                    double wristShift = 0.05;
-                    double wristPos=WRIST_FOLDED_OUT;
-                    double wristMove = gamepad2.right_stick_x;
-                    if (gamepad2.right_stick_button){
+                    //Wrist movement intake
+                    wristmove=gamepad2.right_stick_x;
+                    //teletmetry log
+                    telemetry.addData("Manual","On");
+                    telemetry.addData("wristmove:",wristPos);
+                    telemetry.addData("test",wristPos+(wristShift*wristmove));
+                    //exit manual and move wrist
+                    if (gamepad2.right_stick_button && !rightStickPressed){
                         armOveride=false;
+                        rightStickPressed=true;
+                        if (wristPos>0.6666){
+                            wrist.setPosition(WRIST_FOLDED_IN);
+                            wristLocation=false;
+                        }
+                        else{
+                            wrist.setPosition(WRIST_FOLDED_OUT);
+                            wristLocation=true;
+                        }
                     }
-                    if ((wristPos+(wristShift*wristMove))<=8.333 && (wristPos+(wristShift*wristMove))>=3.333){
-                        wristPos=wristPos+(wristShift*wristMove);
+                    //make sure the wrist is within range
+                    if ((wristPos+(wristShift*wristmove))<=0.8333 && (wristPos+(wristShift*wristmove))>=0.1667){
+                        wristPos=wristPos+(wristShift*wristmove);
                     }
-                    else if (wristPos+(wristShift*wristMove)>8.333){
-                        wristPos=8.333;
+                    if (wristPos+(wristShift*wristmove)>0.8333){
+                        wristPos=0.8333;
                     }
-                    else{
-                        wristPos=3.333;
+                    if (wristPos+(wristShift*wristmove)<0.1667){
+                        wristPos=0.1667;
                     }
+                    //for not having the right button trigger constantly while held down
+                    if (!gamepad2.right_stick_button){
+                        rightStickPressed=false;
+                    }
+                    //set wrist position
+                    wrist.setPosition(wristPos);
+                    //set arm position
+                    armPosition=armPosition+armShift*gamepad2.left_stick_y;
                 }
             //use fudge factor to adjust the arm slightly with the left and right triggers.
-            armPositionFudgeFactor = FUDGE_FACTOR * (gamepad2.right_trigger + (-gamepad2.left_trigger));
+            if (!armOveride){
+                armPositionFudgeFactor = FUDGE_FACTOR * (gamepad2.right_trigger + (-gamepad2.left_trigger));
+            }
+            else{
+                armPositionFudgeFactor=0;
+            }
             /* Here we set the target position of our arm to match the variable that was selected
             by the driver.
             We also set the target velocity (speed) the motor runs at, and use setMode to run it.*/
@@ -181,7 +246,6 @@ public class MecanumWheelArm extends LinearOpMode{
             /* send telemetry to the driver of the arm's current position and target position */
             telemetry.addData("armTarget: ", armMotor.getTargetPosition());
             telemetry.addData("arm Encoder: ", armMotor.getCurrentPosition());
-            telemetry.update();
             
             //below is drivetrain
             // Mecanum drive is controlled with three axes: drive (front-and-back),
