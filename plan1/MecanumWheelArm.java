@@ -141,6 +141,7 @@ public class MecanumWheelArm extends LinearOpMode{
                         intake.setPower(INTAKE_OFF);
                         wrist.setPosition(WRIST_FOLDED_IN);
                     }
+                    //Swap to manual
                     else if (gamepad2.left_stick_button){
                         armOveride=true;
                     }
