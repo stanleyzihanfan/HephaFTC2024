@@ -45,20 +45,20 @@ public class MecanumWheelArm extends LinearOpMode{
     //variables used to set the arm to a specific position.
     double armPosition = (int)ARM_COLLAPSED_INTO_ROBOT;
     double armPositionFudgeFactor;
-    //variable for if arm is out or not
-    boolean armOveride = false;
     //variable for if wrist is out or not(true is in, false is out)
     boolean wristLocation=true;
     //varaibles for wrist
     //change wristShift to change how fast the wrist moves.
     final double wristShift = 0.05;
-    double wristPos=WRIST_FOLDED_OUT;
+    double wristPos=WRIST_FOLDED_IN;
     double wristmove;
     //Change the constant to change how fast the arms moves during manual
     final double armShift=5*ARM_TICKS_PER_DEGREE;
     //Variables to make joystick presses not trigger constantly
     boolean leftStickPressed=false;
     boolean rightStickPressed=false;
+    //Variable for initiating manual
+    boolean manual_init=false;
     
     //main loop
     @Override
@@ -105,140 +105,115 @@ public class MecanumWheelArm extends LinearOpMode{
             else if (gamepad2.b) {
                 intake.setPower(INTAKE_DEPOSIT);
             }
-            if (!armOveride){
-                telemetry.addData("Manual:","Off");
-                //arm positions
-                if(gamepad2.right_bumper){
-                    /* This is the intaking/collecting arm position */
-                    armPosition = ARM_COLLECT;
+            //Manual code
+            //Wrist movement intake
+            wristmove=gamepad2.right_stick_x;
+            //arm movement
+            double armmove=gamepad2.left_stick_y;
+            //make sure the wrist is within range
+            if ((wristPos+(wristShift*wristmove))<=0.8333 && (wristPos+(wristShift*wristmove))>=0.1667){
+                wristPos=wristPos+(wristShift*wristmove);
+            }
+            if (wristPos+(wristShift*wristmove)>0.8333){
+                wristPos=0.8333;
+            }
+            if (wristPos+(wristShift*wristmove)<0.1667){
+                wristPos=0.1667;
+            }
+            //arm positions
+            if(gamepad2.right_bumper){
+                /* This is the intaking/collecting arm position */
+                armPosition = ARM_COLLECT;
+                wristLocation=true;
+                wristPos=WRIST_FOLDED_OUT;
+                intake.setPower(INTAKE_COLLECT);
+                }
+                else if (gamepad2.left_bumper){
+                    /* This is about 20° up from the collecting position to clear the barrier
+                    Note here that we don't set the wrist position or the intake power when we
+                    select this "mode", this means that the intake and wrist will continue what
+                    they were doing before we clicked left bumper. */
+                    armPosition = ARM_CLEAR_BARRIER;
+                }
+                else if (gamepad2.y){
+                    /* This is the correct height to score the sample in the LOW BASKET */
+                    armPosition = ARM_SCORE_SAMPLE_IN_LOW;
+                }
+                else if (gamepad2.dpad_left) {
+                    /* This turns off the intake, folds in the wrist, and moves the arm
+                    back to folded inside the robot. This is also the starting configuration */
+                    armPosition = ARM_COLLAPSED_INTO_ROBOT;
+                    intake.setPower(INTAKE_OFF);
                     wristLocation=true;
-                    wrist.setPosition(WRIST_FOLDED_OUT);
-                    intake.setPower(INTAKE_COLLECT);
-                    }
-
-                    else if (gamepad2.left_bumper){
-                        /* This is about 20° up from the collecting position to clear the barrier
-                        Note here that we don't set the wrist position or the intake power when we
-                        select this "mode", this means that the intake and wrist will continue what
-                        they were doing before we clicked left bumper. */
-                        armPosition = ARM_CLEAR_BARRIER;
-                    }
-
-                    else if (gamepad2.y){
-                        /* This is the correct height to score the sample in the LOW BASKET */
-                        armPosition = ARM_SCORE_SAMPLE_IN_LOW;
+                    wristPos=WRIST_FOLDED_IN;
+                }
+                else if (gamepad2.dpad_right){
+                    /* This is the correct height to score SPECIMEN on the HIGH CHAMBER */
+                    armPosition = ARM_SCORE_SPECIMEN;
+                    wristLocation=true;
+                    wristPos=WRIST_FOLDED_IN;
+                }
+                else if (gamepad2.dpad_up){
+                    /* This sets the arm to vertical to hook onto the LOW RUNG for hanging */
+                    armPosition = ARM_ATTACH_HANGING_HOOK;
+                    intake.setPower(INTAKE_OFF);
+                    wristLocation=true;
+                    wristPos=WRIST_FOLDED_IN;
+                }
+                else if (gamepad2.dpad_down){
+                    /* this moves the arm down to lift the robot up once it has been hooked */
+                    armPosition = ARM_WINCH_ROBOT;
+                    intake.setPower(INTAKE_OFF);
+                    wristLocation=true;
+                    wristPos=WRIST_FOLDED_IN;
+                }
+                //set wrist to opposite position
+                else if (gamepad2.right_stick_button && !rightStickPressed){
+                    if (wristPos>0.6666){
                         wristLocation=false;
-                        wrist.setPosition(WRIST_FOLDED_OUT);
                     }
-
-                    else if (gamepad2.dpad_left) {
-                        /* This turns off the intake, folds in the wrist, and moves the arm
-                        back to folded inside the robot. This is also the starting configuration */
-                        armPosition = ARM_COLLAPSED_INTO_ROBOT;
-                        intake.setPower(INTAKE_OFF);
+                    else{
                         wristLocation=true;
-                        wrist.setPosition(WRIST_FOLDED_IN);
                     }
-
-                    else if (gamepad2.dpad_right){
-                        /* This is the correct height to score SPECIMEN on the HIGH CHAMBER */
-                        armPosition = ARM_SCORE_SPECIMEN;
+                    if (wristLocation){
+                        wristPos=WRIST_FOLDED_IN;
+                        wristLocation=false;
+                    }
+                    else if (!wristLocation){
+                        wristPos=WRIST_FOLDED_OUT;
                         wristLocation=true;
-                        wrist.setPosition(WRIST_FOLDED_IN);
                     }
-
-                    else if (gamepad2.dpad_up){
-                        /* This sets the arm to vertical to hook onto the LOW RUNG for hanging */
-                        armPosition = ARM_ATTACH_HANGING_HOOK;
-                        intake.setPower(INTAKE_OFF);
-                        wristLocation=true;
-                        wrist.setPosition(WRIST_FOLDED_IN);
-                    }
-
-                    else if (gamepad2.dpad_down){
-                        /* this moves the arm down to lift the robot up once it has been hooked */
-                        armPosition = ARM_WINCH_ROBOT;
-                        intake.setPower(INTAKE_OFF);
-                        wristLocation=true;
-                        wrist.setPosition(WRIST_FOLDED_IN);
-                    }
-                    //Swap to manual
-                    else if (gamepad2.right_stick_button && !rightStickPressed){
-                        armOveride=true;
-                        rightStickPressed=true;
-                    }
-                    //set wrist to opposite position
-                    else if (gamepad2.left_stick_button && !leftStickPressed){
-                        if (wristLocation){
-                            wrist.setPosition(WRIST_FOLDED_IN);
-                            wristLocation=false;
-                        }
-                        else if (!wristLocation){
-                            wrist.setPosition(WRIST_FOLDED_OUT);
-                            wristLocation=true;
-                        }
-                        leftStickPressed=true;
-                    }
-                    if (!gamepad2.left_stick_button){
-                        leftStickPressed=false;
-                    }
-                    if (!gamepad2.right_stick_button){
-                        rightStickPressed=false;
-                    }
+                    rightStickPressed=true;
                 }
-                //Manual code
-                else{
-                    //Wrist movement intake
-                    wristmove=gamepad2.right_stick_x;
-                    //teletmetry log
-                    telemetry.addData("Manual","On");
-                    telemetry.addData("wristmove:",wristPos);
-                    telemetry.addData("test",wristPos+(wristShift*wristmove));
-                    //exit manual and move wrist
-                    if (gamepad2.right_stick_button && !rightStickPressed){
-                        armOveride=false;
-                        rightStickPressed=true;
-                        if (wristPos>0.6666){
-                            wrist.setPosition(WRIST_FOLDED_IN);
-                            wristLocation=false;
-                        }
-                        else{
-                            wrist.setPosition(WRIST_FOLDED_OUT);
-                            wristLocation=true;
-                        }
-                    }
-                    //make sure the wrist is within range
-                    if ((wristPos+(wristShift*wristmove))<=0.8333 && (wristPos+(wristShift*wristmove))>=0.1667){
-                        wristPos=wristPos+(wristShift*wristmove);
-                    }
-                    if (wristPos+(wristShift*wristmove)>0.8333){
-                        wristPos=0.8333;
-                    }
-                    if (wristPos+(wristShift*wristmove)<0.1667){
-                        wristPos=0.1667;
-                    }
-                    //for not having the right button trigger constantly while held down
-                    if (!gamepad2.right_stick_button){
-                        rightStickPressed=false;
-                    }
-                    //set wrist position
-                    wrist.setPosition(wristPos);
-                    //set arm position
-                    armPosition=armPosition+armShift*gamepad2.left_stick_y;
-                }
+            //for not having the left & right button trigger constantly while held down
+            if (!gamepad2.left_stick_button){
+                leftStickPressed=false;
+            }
+            if (!gamepad2.right_stick_button){
+                rightStickPressed=false;
+            }
+            //set arm position
+            if (armPosition+armShift*armmove<=5000 && armPosition+armShift*armmove>=0){
+                armPosition=armPosition+armShift*armmove;
+            }
+            else if (armPosition+armShift*armmove>5000){
+                armPosition=5000;
+            }
+            else if (armPosition+armShift*armmove<0){
+                armPosition=0;
+            }
+            //set wrist position
+            wrist.setPosition(wristPos);
             //use fudge factor to adjust the arm slightly with the left and right triggers.
-            if (!armOveride){
-                armPositionFudgeFactor = FUDGE_FACTOR * (gamepad2.right_trigger + (-gamepad2.left_trigger));
-            }
-            else{
-                armPositionFudgeFactor=0;
-            }
+            armPositionFudgeFactor = FUDGE_FACTOR * (gamepad2.right_trigger + (-gamepad2.left_trigger));
             /* Here we set the target position of our arm to match the variable that was selected
             by the driver.
             We also set the target velocity (speed) the motor runs at, and use setMode to run it.*/
             armMotor.setTargetPosition((int) (armPosition + armPositionFudgeFactor));
             ((DcMotorEx) armMotor).setVelocity(2100);
             armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            //teletmetry log
+            telemetry.addData("wristmove:",wristPos);
             //telemetry if motor exceeded current limit
             if (((DcMotorEx) armMotor).isOverCurrent()){
                 telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
