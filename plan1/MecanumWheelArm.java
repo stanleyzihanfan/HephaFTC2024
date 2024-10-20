@@ -69,8 +69,8 @@ public class MecanumWheelArm extends LinearOpMode{
         wheel_2   = hardwareMap.get(DcMotor.class, "wheel_2");
         wheel_3   = hardwareMap.get(DcMotor.class, "wheel_3");
         
-        wheel_2.setDirection(DcMotor.Direction.REVERSE);
-        wheel_3.setDirection(DcMotor.Direction.REVERSE);
+        wheel_0.setDirection(DcMotor.Direction.REVERSE);
+        wheel_1.setDirection(DcMotor.Direction.REVERSE);
         //initiate arm motor
         armMotor   = hardwareMap.get(DcMotor.class, "arm_lift"); //the arm motor
         /* Setting zeroPowerBehavior to BRAKE enables a "brake mode". This causes the motor to slow down
