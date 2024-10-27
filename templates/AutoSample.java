@@ -108,6 +108,11 @@ public class AutoSample extends OpMode
         wheel_1    = hardwareMap.get(DcMotor.class, "wheel_1");
         wheel_2   = hardwareMap.get(DcMotor.class, "wheel_2");
         wheel_3   = hardwareMap.get(DcMotor.class, "wheel_3");
+        //set the drivetrain motors to brake on stop.
+        wheel_0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        wheel_1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        wheel_0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        wheel_1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         
         wheel_2.setDirection(DcMotor.Direction.REVERSE);
         wheel_3.setDirection(DcMotor.Direction.REVERSE);
@@ -275,9 +280,9 @@ public class AutoSample extends OpMode
         //if apply is true, then directly apply speeds to motors.
         if (apply){
             wheel_0.setPower(speeds[0]);
-            wheel_3.setPower(speeds[1]);
-            wheel_1.setPower(speeds[2]);
-            wheel_2.setPower(speeds[3]);
+            wheel_1.setPower(speeds[1]);
+            wheel_2.setPower(speeds[2]);
+            wheel_3.setPower(speeds[3]);
             return speeds;
         }
         else{

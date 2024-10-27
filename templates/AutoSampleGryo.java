@@ -114,6 +114,11 @@ public class AutoSample extends OpMode
         wheel_1    = hardwareMap.get(DcMotor.class, "wheel_1");
         wheel_2   = hardwareMap.get(DcMotor.class, "wheel_2");
         wheel_3   = hardwareMap.get(DcMotor.class, "wheel_3");
+        //set the drivetrain motors to brake on stop.
+        wheel_0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        wheel_1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        wheel_2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        wheel_3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         
         wheel_2.setDirection(DcMotor.Direction.REVERSE);
         wheel_3.setDirection(DcMotor.Direction.REVERSE);
@@ -137,14 +142,9 @@ public class AutoSample extends OpMode
      */
     @Override
     public void init_loop() {
-        /*assert is a variable developers use for testing errers, 
-        if it is false the program will return an assertion error.
-        You can also do assert statement message, where statement
-        is the boolean and message is an optional message to be displayed
-        when the error occurs.*/
-        /*here this line is just so people know they can add something here,
-        it dosn't do anything.*/
-        assert true;
+        //send telemetry of the gyro heading while waiting for driver to start.
+        telemetry.addData(">", "Robot Heading = %4.0f", getHeading());
+        telemetry.update();
     }
 
     /*
@@ -155,6 +155,13 @@ public class AutoSample extends OpMode
         //Log the robot is initializing servo+motor positions
         telemetry.addData("Status: ","Intializing Positions");
         telemetry.update();
+        //set motors to run using encoder ticks.
+        wheel_0.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        wheel_1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        wheel_2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        wheel_3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //reset the IMU
+        imu.resetYaw();
         //reset runtime(for future needs, if using time controls)
         runtime.reset();
         //reset arm encoder
@@ -172,27 +179,6 @@ public class AutoSample extends OpMode
         //be sure to use telemetry and log all variables for debugging!
         
         
-        //sample of rotating robot by time, then raising and lowering the arm.
-        /*trigger drive function(the values are: drive,strafe,turn, and whether
-        or not to have the function directly write the values the motors)
-        Also the function will always return a double list with all of the motor speeds.*/
-        mecanumDrive(0, 0, 0.5, true);
-        //wait 3 seconds
-        waitForTime(3);
-        //reset all motors to 0 speed
-        mecanumDrive(0, 0, 0, true);
-        //wait 1 second
-        waitForTime(1);
-        //set arm position to vertical
-        armPosition=(int)ARM_ATTACH_HANGING_HOOK;
-        //wait untill the motor runs to the desired position
-        while (armMotor.getCurrentPosition()!=armPosition){
-            armToPosition(armPosition, wristPosition, intakeSpeed);
-        }
-        //wait for 3 seconds
-        waitForTime(3);
-        //set arm position to starting position
-        armPosition=(int)ARM_COLLAPSED_INTO_ROBOT;
     }
 
     /*
@@ -253,42 +239,6 @@ public class AutoSample extends OpMode
     
     //Drive Function
     public double[] mecanumDrive(double drive, double strafe, double twist, boolean apply){
-        strafe*=-1;
-        twist*=-1;
-        telemetry.addData("Drive: ",drive);
-        telemetry.addData("Strafe: ",strafe);
-        telemetry.addData("Twist: ",twist);
-        double[] speeds={
-            (drive+strafe+twist),//forward-left motor(wheel_0)
-            (drive-strafe-twist),//forward-right motor(wheel_1)
-            (drive-strafe+twist),//back-left motor(wheel_2)
-            (drive+strafe-twist)//back-right motor(wheel_3)
-        };
-        // Loop through all values in the speeds[] array and find the greatest magnitude.
-        double max = Math.abs(speeds[0]);
-        for(int i = 0; i < speeds.length; i++) {
-            if ( max < Math.abs(speeds[i]) ) {
-                max = Math.abs(speeds[i]);
-            }
-        }
-        //if max is greater than 1, normalize all values to between 0 and 1.
-        if(max>1){
-            for (int i=0;i<speeds.length;i++){
-                //divide the values by the biggest one
-                speeds[i]/=max;
-            }
-        }
-        //if apply is true, then directly apply speeds to motors.
-        if (apply){
-            wheel_0.setPower(speeds[0]);
-            wheel_3.setPower(speeds[1]);
-            wheel_1.setPower(speeds[2]);
-            wheel_2.setPower(speeds[3]);
-            return speeds;
-        }
-        else{
-            return speeds;
-        }
     }
     
     /*
