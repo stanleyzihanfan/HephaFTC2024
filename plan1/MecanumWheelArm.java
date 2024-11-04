@@ -87,6 +87,7 @@ public class Test extends LinearOpMode{
         /* Setting zeroPowerBehavior to BRAKE enables a "brake mode". This causes the motor to slow down
         much faster when it is coasting. This creates a much more controllable drivetrain. As the robot
         stops much quicker. */
+        armMotor.setDirection(DcMotor.Direction.REVERSE);
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         /*This sets the maximum current that the control hub will apply to the arm before throwing a flag */
         ((DcMotorEx) armMotor).setCurrentAlert(5,CurrentUnit.AMPS);
@@ -237,10 +238,7 @@ public class Test extends LinearOpMode{
             else{
             linearpos=linearpos+linearMove*LINEARSHIFT*-1;
             }
-            //telemetry for linear motors.
             telemetry.addData("linear Target:",linearpos);
-            telemetry.addData("Left Position:",linearL.getCurrentPosition());
-            telemtrry.addData("Right Position:",linearR.getCurrentPosition());
             linearR.setTargetPosition((int) (linearpos));
             linearL.setTargetPosition((int) (linearpos));
             ((DcMotorEx) linearR).setVelocity(2100);
@@ -258,7 +256,7 @@ public class Test extends LinearOpMode{
             //teletmetry log
             telemetry.addData("wristmove:",wristPos);
             //telemetry if motor exceeded current limit
-            if (((DcMotorEx) armMotor).isOverCurrent() || ((DcMotorEx) linearR).isOverCurrent() || ((DcMotorEx) linearL).isOverCurrent()){
+            if (((DcMotorEx) armMotor).isOverCurrent()){
                 telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
             }
             /* send telemetry to the driver of the arm's current position and target position */
