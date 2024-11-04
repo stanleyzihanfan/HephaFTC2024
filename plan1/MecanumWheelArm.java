@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 @TeleOp
 
-public class MecanumWheelArm extends LinearOpMode{
+public class Test extends LinearOpMode{
     //arm servo+motor declaration
     public DcMotor  armMotor    = null; //the arm motor
     public CRServo  intake      = null; //the active intake servo
@@ -21,6 +21,8 @@ public class MecanumWheelArm extends LinearOpMode{
     private DcMotor wheel_1=null;
     private DcMotor wheel_2=null;
     private DcMotor wheel_3=null;
+    private DcMotor linearR=null;
+    private DcMotor linearL=null;
     //encoder ticks per degree rotation of the arm
     final double ARM_TICKS_PER_DEGREE =
             28 // number of encoder ticks per rotation of the bare motor
@@ -52,6 +54,10 @@ public class MecanumWheelArm extends LinearOpMode{
     final double wristShift = 0.05;
     double wristPos=WRIST_FOLDED_IN;
     double wristmove;
+    //variable for where the linear slides are
+    double linearpos=0;
+    //how fast the linear slide moves
+    final double LINEARSHIFT=5;
     //Change the constant to change how fast the arms moves during manual
     final double armShift=5*ARM_TICKS_PER_DEGREE;
     //Variables to make joystick presses not trigger constantly
@@ -63,6 +69,11 @@ public class MecanumWheelArm extends LinearOpMode{
     //main loop
     @Override
     public void runOpMode() {
+        //initiate linear motors
+        linearR=hardwareMap.get(DcMotor.class,"linearR");
+        linearL=hardwareMap.get(DcMotor.class,"linearL");
+
+        linearL.setDirection(DcMotor.Direction.REVERSE);
         //initiate drivetrain motors
         wheel_0   = hardwareMap.get(DcMotor.class, "wheel_0");
         wheel_1    = hardwareMap.get(DcMotor.class, "wheel_1");
@@ -79,10 +90,18 @@ public class MecanumWheelArm extends LinearOpMode{
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         /*This sets the maximum current that the control hub will apply to the arm before throwing a flag */
         ((DcMotorEx) armMotor).setCurrentAlert(5,CurrentUnit.AMPS);
+        ((DcMotorEx) linearR).setCurrentAlert(5,CurrentUnit.AMPS);
+        ((DcMotorEx) linearL).setCurrentAlert(5,CurrentUnit.AMPS);
         //reset encoder
         armMotor.setTargetPosition(0);
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        linearR.setTargetPosition(0);
+        linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        linearR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        linearL.setTargetPosition(0);
+        linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        linearL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         /* Define and initialize servos.*/
         intake = hardwareMap.get(CRServo.class, "servo_intake");
         wrist  = hardwareMap.get(Servo.class, "servo_rotate");
@@ -107,9 +126,11 @@ public class MecanumWheelArm extends LinearOpMode{
             }
             //Manual code
             //Wrist movement intake
-            wristmove=gamepad2.right_stick_x;
+            wristmove=gamepad2.right_trigger-gamepad2.left_trigger;
             //arm movement
             double armmove=gamepad2.left_stick_y;
+            //linear slide movement
+            double linearMove=gamepad2.right_stick_y;
             //make sure the wrist is within range
             if ((wristPos+(wristShift*wristmove))<=0.8333 && (wristPos+(wristShift*wristmove))>=0.1667){
                 wristPos=wristPos+(wristShift*wristmove);
@@ -127,6 +148,7 @@ public class MecanumWheelArm extends LinearOpMode{
                 wristLocation=true;
                 wristPos=WRIST_FOLDED_OUT;
                 intake.setPower(INTAKE_COLLECT);
+                linearpos=0;
                 }
                 else if (gamepad2.left_bumper){
                     /* This is about 20° up from the collecting position to clear the barrier
@@ -134,10 +156,12 @@ public class MecanumWheelArm extends LinearOpMode{
                     select this "mode", this means that the intake and wrist will continue what
                     they were doing before we clicked left bumper. */
                     armPosition = ARM_CLEAR_BARRIER;
+                    linearpos=0;
                 }
                 else if (gamepad2.y){
                     /* This is the correct height to score the sample in the LOW BASKET */
                     armPosition = ARM_SCORE_SAMPLE_IN_LOW;
+                    linearpos=200;
                 }
                 else if (gamepad2.dpad_left) {
                     /* This turns off the intake, folds in the wrist, and moves the arm
@@ -146,12 +170,14 @@ public class MecanumWheelArm extends LinearOpMode{
                     intake.setPower(INTAKE_OFF);
                     wristLocation=true;
                     wristPos=WRIST_FOLDED_IN;
+                    linearpos=0;
                 }
                 else if (gamepad2.dpad_right){
                     /* This is the correct height to score SPECIMEN on the HIGH CHAMBER */
                     armPosition = ARM_SCORE_SPECIMEN;
                     wristLocation=true;
                     wristPos=WRIST_FOLDED_IN;
+                    linearpos=3000;
                 }
                 else if (gamepad2.dpad_up){
                     /* This sets the arm to vertical to hook onto the LOW RUNG for hanging */
@@ -159,6 +185,7 @@ public class MecanumWheelArm extends LinearOpMode{
                     intake.setPower(INTAKE_OFF);
                     wristLocation=true;
                     wristPos=WRIST_FOLDED_IN;
+                    linearpos=0;
                 }
                 else if (gamepad2.dpad_down){
                     /* this moves the arm down to lift the robot up once it has been hooked */
@@ -166,6 +193,7 @@ public class MecanumWheelArm extends LinearOpMode{
                     intake.setPower(INTAKE_OFF);
                     wristLocation=true;
                     wristPos=WRIST_FOLDED_IN;
+                    linearpos=0;
                 }
                 //set wrist to opposite position
                 else if (gamepad2.right_stick_button && !rightStickPressed){
@@ -202,14 +230,26 @@ public class MecanumWheelArm extends LinearOpMode{
             else if (armPosition+armShift*armmove<0){
                 armPosition=0;
             }
+            //set linear slide position
+            if (linearpos+linearMove*LINEARSHIFT*-1<0){
+                linearpos=0;
+            }
+            else{
+            linearpos=linearpos+linearMove*LINEARSHIFT*-1;
+            }
+            telemetry.addData("linear Target:",linearpos);
+            linearR.setTargetPosition((int) (linearpos));
+            linearL.setTargetPosition((int) (linearpos));
+            ((DcMotorEx) linearR).setVelocity(2100);
+            ((DcMotorEx) linearL).setVelocity(2100);
+            linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             //set wrist position
             wrist.setPosition(wristPos);
-            //use fudge factor to adjust the arm slightly with the left and right triggers.
-            armPositionFudgeFactor = FUDGE_FACTOR * (gamepad2.right_trigger + (-gamepad2.left_trigger));
             /* Here we set the target position of our arm to match the variable that was selected
             by the driver.
             We also set the target velocity (speed) the motor runs at, and use setMode to run it.*/
-            armMotor.setTargetPosition((int) (armPosition + armPositionFudgeFactor));
+            armMotor.setTargetPosition((int) (armPosition));
             ((DcMotorEx) armMotor).setVelocity(2100);
             armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             //teletmetry log
