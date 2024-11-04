@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 @TeleOp
 
-public class Test extends LinearOpMode{
+public class MecanumWheelArm extends LinearOpMode{
     //arm servo+motor declaration
     public DcMotor  armMotor    = null; //the arm motor
     public CRServo  intake      = null; //the active intake servo
