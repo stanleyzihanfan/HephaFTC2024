@@ -237,6 +237,7 @@ public class Test extends LinearOpMode{
             else{
             linearpos=linearpos+linearMove*LINEARSHIFT*-1;
             }
+            //telemetry for linear motors.
             telemetry.addData("linear Target:",linearpos);
             telemetry.addData("Left Position:",linearL.getCurrentPosition());
             telemtrry.addData("Right Position:",linearR.getCurrentPosition());
