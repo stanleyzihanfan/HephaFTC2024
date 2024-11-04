@@ -238,6 +238,8 @@ public class Test extends LinearOpMode{
             linearpos=linearpos+linearMove*LINEARSHIFT*-1;
             }
             telemetry.addData("linear Target:",linearpos);
+            telemetry.addData("Left Position:",linearL.getCurrentPosition());
+            telemtrry.addData("Right Position:",linearR.getCurrentPosition());
             linearR.setTargetPosition((int) (linearpos));
             linearL.setTargetPosition((int) (linearpos));
             ((DcMotorEx) linearR).setVelocity(2100);
@@ -255,7 +257,7 @@ public class Test extends LinearOpMode{
             //teletmetry log
             telemetry.addData("wristmove:",wristPos);
             //telemetry if motor exceeded current limit
-            if (((DcMotorEx) armMotor).isOverCurrent()){
+            if (((DcMotorEx) armMotor).isOverCurrent() || ((DcMotorEx) linearR).isOverCurrent() || ((DcMotorEx) linearL).isOverCurrent()){
                 telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
             }
             /* send telemetry to the driver of the arm's current position and target position */
