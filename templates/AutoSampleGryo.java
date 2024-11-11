@@ -40,6 +40,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import java.lang.Math;
 
 /*
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -63,10 +64,13 @@ public class AutoSample extends OpMode
     public CRServo  intake      = null; //the active intake servo
     public Servo    wrist       = null; //the wrist servo
     // drivetrain wheel motor declaration
-    private DcMotor wheel_0=null;
-    private DcMotor wheel_1=null;
-    private DcMotor wheel_2=null;
-    private DcMotor wheel_3=null;
+    private DcMotor LFront=null;
+    private DcMotor LRear=null;
+    private DcMotor RFront=null;
+    private DcMotor RRear=null;
+    //linear slide motors
+    private DcMotor linearL=null;
+    private DcMotor linearR=null;
     //IMU declatration
     private IMU imu=null;
     //initiate runtime
@@ -97,7 +101,7 @@ public class AutoSample extends OpMode
     double wristPosition = WRIST_FOLDED_IN;
     double intakeSpeed = INTAKE_OFF;
 
-    /*
+    /**
      * Code to run ONCE when the driver hits INIT
      */
     @Override
@@ -109,19 +113,37 @@ public class AutoSample extends OpMode
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+        //initiate linear motors
+        linearL=hardwareMap.get(DcMotor.class,"linearL");
+        linearL=hardwareMap.get(DcMotor.class,"linearL");
+        //reverse left side direction
+        linearL.setDirection(DeMotor.Direction.REVERSE);
+        //brake on stop
+        linearL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lienarR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BARKE);
+        //Set current alert
+        ((DcMotorEx) linearR).setCurrentAlert(5,CurrentUnit.AMPS);
+        ((DcMotorEx) linearL).setCurrentAlert(5,CurrentUnit.AMPS);
+        //Reset encoder
+        linearR.setTargetPosition(0);
+        linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        linearR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        linearL.setTargetPosition(0);
+        linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        linearL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //initiate drivetrain motors
-        wheel_0   = hardwareMap.get(DcMotor.class, "wheel_0");
-        wheel_1    = hardwareMap.get(DcMotor.class, "wheel_1");
-        wheel_2   = hardwareMap.get(DcMotor.class, "wheel_2");
-        wheel_3   = hardwareMap.get(DcMotor.class, "wheel_3");
+        LFront   = hardwareMap.get(DcMotor.class, "LFront");
+        LRear    = hardwareMap.get(DcMotor.class, "LRear");
+        RFront   = hardwareMap.get(DcMotor.class, "RFront");
+        RRear   = hardwareMap.get(DcMotor.class, "RRear");
         //set the drivetrain motors to brake on stop.
-        wheel_0.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        wheel_1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        wheel_2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        wheel_3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        LFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        LRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        RRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         
-        wheel_2.setDirection(DcMotor.Direction.REVERSE);
-        wheel_3.setDirection(DcMotor.Direction.REVERSE);
+        RFront.setDirection(DcMotor.Direction.REVERSE);
+        RRear.setDirection(DcMotor.Direction.REVERSE);
         //initiate arm motor
         armMotor   = hardwareMap.get(DcMotor.class, "arm_lift"); //the arm motor
         /* Setting zeroPowerBehavior to BRAKE enables a "brake mode". This causes the motor to slow down
@@ -137,7 +159,7 @@ public class AutoSample extends OpMode
         telemetry.addData("Status: ", "Initialized");
     }
 
-    /*
+    /**
      * Code to run REPEATEDLY after the driver hits INIT, but before they hit START
      */
     @Override
@@ -147,7 +169,7 @@ public class AutoSample extends OpMode
         telemetry.update();
     }
 
-    /*
+    /**
      * Code to run ONCE when the driver hits START
      */
     @Override
@@ -156,10 +178,10 @@ public class AutoSample extends OpMode
         telemetry.addData("Status: ","Intializing Positions");
         telemetry.update();
         //set motors to run using encoder ticks.
-        wheel_0.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        wheel_1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        wheel_2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        wheel_3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        LFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //reset the IMU
         imu.resetYaw();
         //reset runtime(for future needs, if using time controls)
@@ -181,16 +203,111 @@ public class AutoSample extends OpMode
         
     }
 
-    /*
+    /**
      * Code to run REPEATEDLY after the driver hits START but before they hit STOP
      */
     @Override
     public void loop() {
         //Constantly set the arm positions, as the arm motor requires this to operate properly
         armToPosition(armPosition, wristPosition, intakeSpeed);
+        telemetry.update();
     }
-    
-    //Wait Function
+
+    /**
+     * main gryo drive function
+     */
+    public void drivegyro(double twist, double strafe, double drive, double speed){
+        double distances[]=calculateWheelMovement(strafe, drive, twist);
+        for (int i=0;i<distance.length;i++){
+            distances[i]=distance[i]
+        }
+        //wheel one
+        LFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //wheel two
+        LRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //wheel three
+        RFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //wheel four
+        RRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+    }
+
+    /**
+     * Get steering correction
+     * @param desiredHeading target heading
+     * @param proportionalGain rate of change
+     * @return the amount to be corrected
+     */
+    public double getSteeringCorrection(double desiredHeading, double proportionalGain) {
+        targetHeading = desiredHeading;  // Save for telemetry
+        // Determine the heading current error
+        headingError = targetHeading - getHeading();
+        // Normalize the error to be within +/- 180 degrees
+        while (headingError > 180)  headingError -= 360;
+        while (headingError <= -180) headingError += 360;
+        // Multiply the error by the gain to determine the required steering correction/  Limit the result to +/- 1.0
+        return Range.clip(headingError * proportionalGain, -1, 1);
+    }
+
+    /**
+     * get gyro heading in degrees
+     */
+    public double getHeading(){
+        YawPitchRollAngles orientation=imu.getRobotYawPitchRollAngles();
+        return orientation.getYaw(AngleUnit.DEGREES);
+    }
+
+    /**
+     * robot movement to wheel movement
+     */
+    public static double[] calculateWheelMovement(double xDistance, double yDistance, double turnAngle) {
+        //wheel diameter
+        double diameter=537.7;
+        // Define the wheel circumference
+        double wheelCircumference = Math.PI * diameter;
+        //Calculate total displacement
+        double displacement = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+        // Calculate the average wheel distance
+        double averageDistance = displacement / Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+        // Calculate the wheel movement for each direction
+        double leftFront = (xDistance + displacement * Math.cos(Math.atan2(yDistance, xDistance))) / wheelCircumference;
+        double rightFront = (xDistance - displacement * Math.cos(Math.atan2(yDistance, xDistance))) / wheelCircumference;
+        double leftRear = (xDistance + displacement * Math.cos(Math.atan2(-yDistance, xDistance))) / wheelCircumference;
+        double rightRear = (xDistance - displacement * Math.cos(Math.atan2(-yDistance, xDistance))) / wheelCircumference;
+        // Adjust for turn angle
+        if (turnAngle != 0) {
+            double turnRadius = displacement / (2 * Math.PI * turnAngle / 360);
+            double turnCorrection = (turnRadius - diameter/2) / turnRadius;
+            leftFront *= turnCorrection;
+            rightFront *= turnCorrection;
+            leftRear *= turnCorrection;
+            rightRear *= turnCorrection;
+        }
+        return new double[]{leftFront, rightFront, leftRear, rightRear};
+    }
+
+    /**
+     * wheel movement to robot movement
+     */
+    public static double[] calculateRobotMovementFromWheel(double leftFront, double rightFront, double leftRear, double rightRear) {
+        //wheel diameter
+        double diameter=537.7;
+        // Define the wheel circumference
+        double wheelCircumference = Math.PI * diameter;
+        // Calculate the average wheel distance
+        double averageDistance = (leftFront + rightFront + leftRear + rightRear) / 4;
+        // Calculate the total distance moved
+        double totalDistance = (leftFront + leftRear + rightFront + rightRear) / 4;
+        // Calculate the x and y distances
+        double xDistance = (leftFront - rightFront + leftRear - rightRear) / wheelCircumference;
+        double yDistance = (leftFront + rightFront - leftRear - rightRear) / wheelCircumference;
+        // Calculate the rotation
+        double rotation = (leftFront + rightFront + leftRear + rightRear) / wheelCircumference;
+        return new double[]{xDistance, yDistance, rotation};
+    }
+    /**
+     * Wait Function
+     */
     //This is only here for the sake of not writing a for loop every time you need to wait.
     public void waitForTime(double seconds){
         //reset runtime
@@ -199,14 +316,15 @@ public class AutoSample extends OpMode
         while(runtime.seconds()<=seconds){
             //update telemtry
             telemetry.addData("Time","%4.1f S Elapsed",runtime.seconds());
-            telemetry.update();
             //Constantly call the armToPosition function.
             armToPosition(armPosition, wristPosition, intakeSpeed);
         }
     }
     
-    //arm function
-    public void armToPosition(double armPos, double wristPos, double intakeSpeed){
+    /**
+     * arm function
+     */
+    public void armToPosition(double armPos, double wristPos, double intakeSpeed, double linearpos){
         //set arm motor target position
         armMotor.setTargetPosition((int)(armPos));
         //set motor velocity
@@ -217,7 +335,6 @@ public class AutoSample extends OpMode
         if (((DcMotorEx) armMotor).isOverCurrent()){
             telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
         }
-        telemetry.update();
         //If the wrist pos passed in is greater than 8.333, then reset it to 8.333.
         //This is to prevent the servo from jaming itself against the arm and burning
         //out due to a bad value being passed in.
@@ -233,15 +350,12 @@ public class AutoSample extends OpMode
             //If value is out of range in the positive direction
             wrist.setPosition(8.333);
         }
+        telemetry.addData("Wrist position",wristPos);
         //set intake power/speed
         intake.setPower(intakeSpeed);
     }
     
-    //Drive Function
-    public double[] mecanumDrive(double drive, double strafe, double twist, boolean apply){
-    }
-    
-    /*
+    /**
      * Code to run ONCE after the driver hits STOP
      */
     @Override
