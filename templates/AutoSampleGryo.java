@@ -199,7 +199,7 @@ public class AutoSample extends OpMode
         
         //ADD MAIN CODE HERE
         //be sure to use telemetry and log all variables for debugging!
-        
+        drivegyro(0, 0, 1, 500);
         
     }
 
@@ -215,21 +215,47 @@ public class AutoSample extends OpMode
 
     /**
      * main gryo drive function
+     * All parameters are encoder ticks
+     * twist is degrees
      */
     public void drivegyro(double twist, double strafe, double drive, double speed){
         double distances[]=calculateWheelMovement(strafe, drive, twist);
-        for (int i=0;i<distance.length;i++){
-            distances[i]=distance[i]
-        }
+        distances[0]=LFront.getCurrentPosition()+distances[0];
+        distances[1]=RFront.getCurrentPosition()+distances[1];
+        distances[2]=LRear.getCurrentPosition()+distances[2];
+        distances[3]=RRear.getCurrentPosition()+distances[3];
         //wheel one
         LFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LFront.setPower(speed);
+        LFront.setTargetPosition(distances[0]);
         //wheel two
         LRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LRear.setPower(speed);
+        LRear.setTargetPosition(distances[2]);
         //wheel three
         RFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        RFront.setPower(speed);
+        RFront.setTargetPosition(distances[1]);
         //wheel four
         RRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
+        RRear.setPower(speed);
+        RRear.setTargetPosition(distances[3]);
+        //run motors
+        LFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        while (LFront.isBusy() || LRear.isBusy() || RFront.isBusy() || RRear.isBusy()){
+            //telemetry
+            telemetry.addData("Left Front Motor (0):",Double.toString(LFront.getCurrentPosition()));
+            telemetry.addData("Left Front Motor Target:",Double.toString(distances[0]));
+            telemetry.addData("Right Front Motor (1):",Double.toString(RFront.getCurrentPosition()));
+            telemetry.addData("Right Front Motor Target:",Double.toString(distances[1]));
+            telemetry.addData("Left Rear Motor (2):",Double.toString(LRear.getCurrentPosition()));
+            telemetry.addData("Left Rear Motor Target:",Double.toString(distances[2]));
+            telemetry.addData("Right Rear Motor (3):",Double.toString(RRear.getCurrentPosition()));
+            telemetry.addData("Right Rear Motor Target:",Double.toString(distances[3]));
+        }
     }
 
     /**
