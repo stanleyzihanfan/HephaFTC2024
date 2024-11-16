@@ -57,7 +57,7 @@ public class MecanumWheelArm extends LinearOpMode{
     //variable for where the linear slides are
     double linearpos=0;
     //how fast the linear slide moves
-    final double LINEARSHIFT=8;
+    final double LINEARSHIFT=7;
     //Change the constant to change how fast the arms moves during manual
     final double armShift=5*ARM_TICKS_PER_DEGREE;
     //Variables to make joystick presses not trigger constantly
@@ -142,61 +142,61 @@ public class MecanumWheelArm extends LinearOpMode{
                 wristPos=0.1667;
             }
             //arm positions
-            if(gamepad2.right_bumper){
-                /* This is the intaking/collecting arm position */
-                armPosition = ARM_COLLECT;
-                wristLocation=true;
-                wristPos=WRIST_FOLDED_OUT;
-                intake.setPower(INTAKE_COLLECT);
-                linearpos=0;
-                }
-                else if (gamepad2.left_bumper){
-                    /* This is about 20° up from the collecting position to clear the barrier
-                    Note here that we don't set the wrist position or the intake power when we
-                    select this "mode", this means that the intake and wrist will continue what
-                    they were doing before we clicked left bumper. */
-                    armPosition = ARM_CLEAR_BARRIER;
-                    linearpos=0;
-                }
-                else if (gamepad2.y){
-                    /* This is the correct height to score the sample in the LOW BASKET */
-                    armPosition = ARM_SCORE_SAMPLE_IN_LOW;
-                    linearpos=200;
-                }
-                else if (gamepad2.dpad_left) {
-                    /* This turns off the intake, folds in the wrist, and moves the arm
-                    back to folded inside the robot. This is also the starting configuration */
-                    armPosition = ARM_COLLAPSED_INTO_ROBOT;
-                    intake.setPower(INTAKE_OFF);
-                    wristLocation=true;
-                    wristPos=WRIST_FOLDED_IN;
-                    linearpos=0;
-                }
-                else if (gamepad2.dpad_right){
-                    /* This is the correct height to score SPECIMEN on the HIGH CHAMBER */
-                    armPosition = ARM_SCORE_SPECIMEN;
-                    wristLocation=true;
-                    wristPos=WRIST_FOLDED_IN;
-                    linearpos=3000;
-                }
-                else if (gamepad2.dpad_up){
-                    /* This sets the arm to vertical to hook onto the LOW RUNG for hanging */
-                    armPosition = ARM_ATTACH_HANGING_HOOK;
-                    intake.setPower(INTAKE_OFF);
-                    wristLocation=true;
-                    wristPos=WRIST_FOLDED_IN;
-                    linearpos=0;
-                }
-                else if (gamepad2.dpad_down){
-                    /* this moves the arm down to lift the robot up once it has been hooked */
-                    armPosition = ARM_WINCH_ROBOT;
-                    intake.setPower(INTAKE_OFF);
-                    wristLocation=true;
-                    wristPos=WRIST_FOLDED_IN;
-                    linearpos=0;
-                }
+            // if(gamepad2.right_bumper){
+            //     /* This is the intaking/collecting arm position */
+            //     armPosition = ARM_COLLECT;
+            //     wristLocation=true;
+            //     wristPos=WRIST_FOLDED_OUT;
+            //     intake.setPower(INTAKE_COLLECT);
+            //     linearpos=0;
+            //     }
+            //     else if (gamepad2.left_bumper){
+            //         /* This is about 20° up from the collecting position to clear the barrier
+            //         Note here that we don't set the wrist position or the intake power when we
+            //         select this "mode", this means that the intake and wrist will continue what
+            //         they were doing before we clicked left bumper. */
+            //         armPosition = ARM_CLEAR_BARRIER;
+            //         linearpos=0;
+            //     }
+            //     else if (gamepad2.y){
+            //         /* This is the correct height to score the sample in the LOW BASKET */
+            //         armPosition = ARM_SCORE_SAMPLE_IN_LOW;
+            //         linearpos=200;
+            //     }
+            //     else if (gamepad2.dpad_left) {
+            //         /* This turns off the intake, folds in the wrist, and moves the arm
+            //         back to folded inside the robot. This is also the starting configuration */
+            //         armPosition = ARM_COLLAPSED_INTO_ROBOT;
+            //         intake.setPower(INTAKE_OFF);
+            //         wristLocation=true;
+            //         wristPos=WRIST_FOLDED_IN;
+            //         linearpos=0;
+            //     }
+            //     else if (gamepad2.dpad_right){
+            //         /* This is the correct height to score SPECIMEN on the HIGH CHAMBER */
+            //         armPosition = ARM_SCORE_SPECIMEN;
+            //         wristLocation=true;
+            //         wristPos=WRIST_FOLDED_IN;
+            //         linearpos=3000;
+            //     }
+            //     else if (gamepad2.dpad_up){
+            //         /* This sets the arm to vertical to hook onto the LOW RUNG for hanging */
+            //         armPosition = ARM_ATTACH_HANGING_HOOK;
+            //         intake.setPower(INTAKE_OFF);
+            //         wristLocation=true;
+            //         wristPos=WRIST_FOLDED_IN;
+            //         linearpos=0;
+            //     }
+            //     else if (gamepad2.dpad_down){
+            //         /* this moves the arm down to lift the robot up once it has been hooked */
+            //         armPosition = ARM_WINCH_ROBOT;
+            //         intake.setPower(INTAKE_OFF);
+            //         wristLocation=true;
+            //         wristPos=WRIST_FOLDED_IN;
+            //         linearpos=0;
+            //     }
                 //set wrist to opposite position
-                else if (gamepad2.right_stick_button && !rightStickPressed){
+                if (gamepad2.right_stick_button && !rightStickPressed){
                     if (wristPos>0.6666){
                         wristLocation=false;
                     }
@@ -221,13 +221,13 @@ public class MecanumWheelArm extends LinearOpMode{
                 rightStickPressed=false;
             }
             //set arm position
-            if (armPosition+armShift*armmove<=5000 && armPosition+armShift*armmove>=0){
+            if (armPosition+armShift*armmove>=-5000 && armPosition+armShift*armmove<=0){
                 armPosition=armPosition+armShift*armmove;
             }
-            else if (armPosition+armShift*armmove>5000){
-                armPosition=5000;
+            else if (armPosition+armShift*armmove<-5000){
+                armPosition=-5000;
             }
-            else if (armPosition+armShift*armmove<0){
+            else if (armPosition+armShift*armmove>0){
                 armPosition=0;
             }
             //set linear slide position
