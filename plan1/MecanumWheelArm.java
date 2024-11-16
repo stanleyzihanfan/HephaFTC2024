@@ -57,7 +57,7 @@ public class MecanumWheelArm extends LinearOpMode{
     //variable for where the linear slides are
     double linearpos=0;
     //how fast the linear slide moves
-    final double LINEARSHIFT=5;
+    final double LINEARSHIFT=8;
     //Change the constant to change how fast the arms moves during manual
     final double armShift=5*ARM_TICKS_PER_DEGREE;
     //Variables to make joystick presses not trigger constantly
