@@ -31,6 +31,10 @@ package org.firstinspires.ftc.teamcode;
 
 //import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -57,7 +61,7 @@ import java.lang.Math;
  */
 @Autonomous
 
-public class AutoSample extends OpMode
+public class AutoSampleGryo extends OpMode
 {
     //arm servo+motor declaration
     public DcMotor  armMotor    = null; //the arm motor
@@ -100,6 +104,7 @@ public class AutoSample extends OpMode
     double armPosition = (int)ARM_COLLAPSED_INTO_ROBOT;
     double wristPosition = WRIST_FOLDED_IN;
     double intakeSpeed = INTAKE_OFF;
+    double linearPos = 0;
 
     /**
      * Code to run ONCE when the driver hits INIT
@@ -117,10 +122,10 @@ public class AutoSample extends OpMode
         linearL=hardwareMap.get(DcMotor.class,"linearL");
         linearL=hardwareMap.get(DcMotor.class,"linearL");
         //reverse left side direction
-        linearL.setDirection(DeMotor.Direction.REVERSE);
+        linearL.setDirection(DcMotor.Direction.REVERSE);
         //brake on stop
         linearL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        lienarR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BARKE);
+        linearR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         //Set current alert
         ((DcMotorEx) linearR).setCurrentAlert(5,CurrentUnit.AMPS);
         ((DcMotorEx) linearL).setCurrentAlert(5,CurrentUnit.AMPS);
@@ -209,7 +214,7 @@ public class AutoSample extends OpMode
     @Override
     public void loop() {
         //Constantly set the arm positions, as the arm motor requires this to operate properly
-        armToPosition(armPosition, wristPosition, intakeSpeed);
+        armToPosition(armPosition, wristPosition, intakeSpeed,linearPos);
         telemetry.update();
     }
 
