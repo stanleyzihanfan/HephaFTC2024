@@ -57,7 +57,7 @@ public class Test extends LinearOpMode{
     //variable for where the linear slides are
     double linearpos=0;
     //how fast the linear slide moves
-    final double LINEARSHIFT=7;
+    final double LINEARSHIFT=14;
     //Change the constant to change how fast the arms moves during manual
     final double armShift=5*ARM_TICKS_PER_DEGREE;
     //Variables to make joystick presses not trigger constantly
@@ -221,13 +221,13 @@ public class Test extends LinearOpMode{
                 rightStickPressed=false;
             }
             //set arm position
-            if (armPosition+armShift*armmove>=-5000 && armPosition+armShift*armmove<=0){
+            if (armPosition+armShift*armmove<=5000 && armPosition+armShift*armmove>=0){
                 armPosition=armPosition+armShift*armmove;
             }
-            else if (armPosition+armShift*armmove<-5000){
-                armPosition=-5000;
+            else if (armPosition+armShift*armmove>5000){
+                armPosition=5000;
             }
-            else if (armPosition+armShift*armmove>0){
+            else if (armPosition+armShift*armmove<0){
                 armPosition=0;
             }
             //set linear slide position
