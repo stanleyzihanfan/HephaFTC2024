@@ -142,10 +142,22 @@ public class MecanumWheelArm extends LinearOpMode{
                 wristPos=0.1667;
             }
             //arm positions
-            if(gamepad2.y){
+            if (gamepad2.right_bumper){
                 /* This is the correct height to score the sample in the HIGH BASKET */
-                armPosition = 2738;
-                linearpos=2370;
+                armPosition = 2830;
+                linearpos=2500;
+                wristPos=WRIST_FOLDED_OUT;
+            }
+            else if (gamepad2.y){
+                //reset arm
+                linearpos=50;
+                if (armPosition>1994){
+                    armPosition=1994;
+                }
+            }
+            else if (gamepad2.left_bumper){
+                //this is the hight for the lower basket
+                armPosition=2500;
                 wristPos=WRIST_FOLDED_OUT;
             }
             //set wrist to opposite position

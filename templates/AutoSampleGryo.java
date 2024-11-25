@@ -118,9 +118,11 @@ public class AutoSampleGryo extends OpMode
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+        //initiate imu
+        imu = hardwareMap.get(IMU.class, "imu");
         //initiate linear motors
         linearL=hardwareMap.get(DcMotor.class,"linearL");
-        linearL=hardwareMap.get(DcMotor.class,"linearL");
+        linearR=hardwareMap.get(DcMotor.class,"linearR");
         //reverse left side direction
         linearL.setDirection(DcMotor.Direction.REVERSE);
         //brake on stop
@@ -137,10 +139,10 @@ public class AutoSampleGryo extends OpMode
         linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         linearL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //initiate drivetrain motors
-        LFront   = hardwareMap.get(DcMotor.class, "LFront");
-        LRear    = hardwareMap.get(DcMotor.class, "LRear");
-        RFront   = hardwareMap.get(DcMotor.class, "RFront");
-        RRear   = hardwareMap.get(DcMotor.class, "RRear");
+        LFront   = hardwareMap.get(DcMotor.class, "wheel_0");
+        LRear    = hardwareMap.get(DcMotor.class, "wheel_2");
+        RFront   = hardwareMap.get(DcMotor.class, "wheel_1");
+        RRear   = hardwareMap.get(DcMotor.class, "wheel_3");
         //set the drivetrain motors to brake on stop.
         LFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -204,7 +206,7 @@ public class AutoSampleGryo extends OpMode
         
         //ADD MAIN CODE HERE
         //be sure to use telemetry and log all variables for debugging!
-        drivegyro(0, 0, 1, 500);
+        drivegyro(500, 0, 0, 50, 50);
         
     }
 
@@ -219,11 +221,18 @@ public class AutoSampleGryo extends OpMode
     }
 
     /**
-     * main gryo drive function
-     * All parameters are encoder ticks
-     * twist is degrees
+     * main gryo drive function.
+     * All parameters are encoder ticks.
+     * Twist is degrees.
+     * @param twist is degrees to turn
+     * @param strafe is how far sideways
+     * @param drive is how far forwards
+     * @param speed is drive speed
+     * @param rotationspeed is rotation speed
+     * @return none
      */
-    public void drivegyro(double twist, double strafe, double drive, double speed){
+    public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed){
+        double targetdirection=getHeading()+twist;
         double distances[]=calculateWheelMovement(strafe, drive, twist);
         distances[0]=LFront.getCurrentPosition()+distances[0];
         distances[1]=RFront.getCurrentPosition()+distances[1];
@@ -232,25 +241,30 @@ public class AutoSampleGryo extends OpMode
         //wheel one
         LFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         LFront.setPower(speed);
-        LFront.setTargetPosition(distances[0]);
+        LFront.setTargetPosition((int)distances[0]);
         //wheel two
         LRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         LRear.setPower(speed);
-        LRear.setTargetPosition(distances[2]);
+        LRear.setTargetPosition((int)distances[2]);
         //wheel three
         RFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         RFront.setPower(speed);
-        RFront.setTargetPosition(distances[1]);
+        RFront.setTargetPosition((int)distances[1]);
         //wheel four
         RRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         RRear.setPower(speed);
-        RRear.setTargetPosition(distances[3]);
+        RRear.setTargetPosition((int)distances[3]);
         //run motors
         LFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         while (LFront.isBusy() || LRear.isBusy() || RFront.isBusy() || RRear.isBusy()){
+            double steeringCorrection=getSteeringCorrection(targetdirection, rotationspeed);
+            RFront.setPower(speed+steeringCorrection);
+            RRear.setPower(speed+steeringCorrection);
+            LFront.setPower(speed-steeringCorrection);
+            LRear.setPower(speed-steeringCorrection);
             //telemetry
             telemetry.addData("Left Front Motor (0):",Double.toString(LFront.getCurrentPosition()));
             telemetry.addData("Left Front Motor Target:",Double.toString(distances[0]));
@@ -270,9 +284,9 @@ public class AutoSampleGryo extends OpMode
      * @return the amount to be corrected
      */
     public double getSteeringCorrection(double desiredHeading, double proportionalGain) {
-        targetHeading = desiredHeading;  // Save for telemetry
+        double targetHeading = desiredHeading;  // Save for telemetry
         // Determine the heading current error
-        headingError = targetHeading - getHeading();
+        double headingError = targetHeading - getHeading();
         // Normalize the error to be within +/- 180 degrees
         while (headingError > 180)  headingError -= 360;
         while (headingError <= -180) headingError += 360;
@@ -290,6 +304,10 @@ public class AutoSampleGryo extends OpMode
 
     /**
      * robot movement to wheel movement
+     * @param xDistance is x coordinate change
+     * @param yDistance is y coordinate change
+     * @param turnAngle is angle of turn
+     * @return double list of leftFront wheel movement, rightFront wheel movement, leftRear wheel movement, rightRear wheel movement, in encoder ticks
      */
     public static double[] calculateWheelMovement(double xDistance, double yDistance, double turnAngle) {
         //wheel diameter
@@ -348,7 +366,7 @@ public class AutoSampleGryo extends OpMode
             //update telemtry
             telemetry.addData("Time","%4.1f S Elapsed",runtime.seconds());
             //Constantly call the armToPosition function.
-            armToPosition(armPosition, wristPosition, intakeSpeed);
+            armToPosition(armPosition, wristPosition, intakeSpeed, linearPos);
         }
     }
     
