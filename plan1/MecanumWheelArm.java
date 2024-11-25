@@ -142,77 +142,30 @@ public class MecanumWheelArm extends LinearOpMode{
                 wristPos=0.1667;
             }
             //arm positions
-            // if(gamepad2.right_bumper){
-            //     /* This is the intaking/collecting arm position */
-            //     armPosition = ARM_COLLECT;
-            //     wristLocation=true;
-            //     wristPos=WRIST_FOLDED_OUT;
-            //     intake.setPower(INTAKE_COLLECT);
-            //     linearpos=0;
-            //     }
-            //     else if (gamepad2.left_bumper){
-            //         /* This is about 20° up from the collecting position to clear the barrier
-            //         Note here that we don't set the wrist position or the intake power when we
-            //         select this "mode", this means that the intake and wrist will continue what
-            //         they were doing before we clicked left bumper. */
-            //         armPosition = ARM_CLEAR_BARRIER;
-            //         linearpos=0;
-            //     }
-            //     else if (gamepad2.y){
-            //         /* This is the correct height to score the sample in the LOW BASKET */
-            //         armPosition = ARM_SCORE_SAMPLE_IN_LOW;
-            //         linearpos=200;
-            //     }
-            //     else if (gamepad2.dpad_left) {
-            //         /* This turns off the intake, folds in the wrist, and moves the arm
-            //         back to folded inside the robot. This is also the starting configuration */
-            //         armPosition = ARM_COLLAPSED_INTO_ROBOT;
-            //         intake.setPower(INTAKE_OFF);
-            //         wristLocation=true;
-            //         wristPos=WRIST_FOLDED_IN;
-            //         linearpos=0;
-            //     }
-            //     else if (gamepad2.dpad_right){
-            //         /* This is the correct height to score SPECIMEN on the HIGH CHAMBER */
-            //         armPosition = ARM_SCORE_SPECIMEN;
-            //         wristLocation=true;
-            //         wristPos=WRIST_FOLDED_IN;
-            //         linearpos=3000;
-            //     }
-            //     else if (gamepad2.dpad_up){
-            //         /* This sets the arm to vertical to hook onto the LOW RUNG for hanging */
-            //         armPosition = ARM_ATTACH_HANGING_HOOK;
-            //         intake.setPower(INTAKE_OFF);
-            //         wristLocation=true;
-            //         wristPos=WRIST_FOLDED_IN;
-            //         linearpos=0;
-            //     }
-            //     else if (gamepad2.dpad_down){
-            //         /* this moves the arm down to lift the robot up once it has been hooked */
-            //         armPosition = ARM_WINCH_ROBOT;
-            //         intake.setPower(INTAKE_OFF);
-            //         wristLocation=true;
-            //         wristPos=WRIST_FOLDED_IN;
-            //         linearpos=0;
-            //     }
-                //set wrist to opposite position
-                if (gamepad2.right_stick_button && !rightStickPressed){
-                    if (wristPos>0.6666){
-                        wristLocation=false;
-                    }
-                    else{
-                        wristLocation=true;
-                    }
-                    if (wristLocation){
-                        wristPos=WRIST_FOLDED_IN;
-                        wristLocation=false;
-                    }
-                    else if (!wristLocation){
-                        wristPos=WRIST_FOLDED_OUT;
-                        wristLocation=true;
-                    }
-                    rightStickPressed=true;
+            if(gamepad2.y){
+                /* This is the correct height to score the sample in the HIGH BASKET */
+                armPosition = 2738;
+                linearpos=2370;
+                wristPos=WRIST_FOLDED_OUT;
+            }
+            //set wrist to opposite position
+            else if (gamepad2.right_stick_button && !rightStickPressed){
+                if (wristPos>0.6666){
+                    wristLocation=false;
                 }
+                else{
+                    wristLocation=true;
+                }
+                if (wristLocation){
+                    wristPos=WRIST_FOLDED_IN;
+                    wristLocation=false;
+                }
+                else if (!wristLocation){
+                    wristPos=WRIST_FOLDED_OUT;
+                    wristLocation=true;
+                }
+                rightStickPressed=true;
+            }
             //for not having the left & right button trigger constantly while held down
             if (!gamepad2.left_stick_button){
                 leftStickPressed=false;
@@ -231,8 +184,8 @@ public class MecanumWheelArm extends LinearOpMode{
                 armPosition=0;
             }
             //set linear slide position
-            if (linearpos+linearMove*LINEARSHIFT*-1<0){
-                linearpos=0;
+            if (linearpos+linearMove*LINEARSHIFT*-1<50){
+                linearpos=50;
             }
             else{
             linearpos=linearpos+linearMove*LINEARSHIFT*-1;
@@ -240,8 +193,8 @@ public class MecanumWheelArm extends LinearOpMode{
             telemetry.addData("linear Target:",linearpos);
             linearR.setTargetPosition((int) (linearpos));
             linearL.setTargetPosition((int) (linearpos));
-            ((DcMotorEx) linearR).setVelocity(2100);
-            ((DcMotorEx) linearL).setVelocity(2100);
+            ((DcMotorEx) linearR).setVelocity(2000);
+            ((DcMotorEx) linearL).setVelocity(2000);
             linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             //set wrist position
