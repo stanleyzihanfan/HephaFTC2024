@@ -139,18 +139,31 @@ public class AutoSampleGryo extends OpMode
         linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         linearL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //initiate drivetrain motors
-        LFront   = hardwareMap.get(DcMotor.class, "wheel_0");
-        LRear    = hardwareMap.get(DcMotor.class, "wheel_2");
+        LFront   = hardwareMap.get(DcMotor.class, "wheel_2");
+        LRear    = hardwareMap.get(DcMotor.class, "wheel_0");
         RFront   = hardwareMap.get(DcMotor.class, "wheel_1");
-        RRear   = hardwareMap.get(DcMotor.class, "wheel_3");
+        RRear    = hardwareMap.get(DcMotor.class, "wheel_3");
         //set the drivetrain motors to brake on stop.
         LFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         LRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         RRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //set direction
+        LFront.setTargetPosition(0);
+        LFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        LRear.setTargetPosition(0);
+        LRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        RFront.setTargetPosition(0);
+        RFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        RFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        RRear.setTargetPosition(0);
+        RRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        RRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         
-        RFront.setDirection(DcMotor.Direction.REVERSE);
-        RRear.setDirection(DcMotor.Direction.REVERSE);
+        LFront.setDirection(DcMotor.Direction.REVERSE);
+        LRear.setDirection(DcMotor.Direction.REVERSE);
         //initiate arm motor
         armMotor   = hardwareMap.get(DcMotor.class, "arm_lift"); //the arm motor
         /* Setting zeroPowerBehavior to BRAKE enables a "brake mode". This causes the motor to slow down
@@ -206,7 +219,7 @@ public class AutoSampleGryo extends OpMode
         
         //ADD MAIN CODE HERE
         //be sure to use telemetry and log all variables for debugging!
-        drivegyro(500, 0, 0, 50, 50);
+        drivegyro(0, 0, 15, 0.5, 0.1);
         
     }
 
@@ -217,12 +230,16 @@ public class AutoSampleGryo extends OpMode
     public void loop() {
         //Constantly set the arm positions, as the arm motor requires this to operate properly
         armToPosition(armPosition, wristPosition, intakeSpeed,linearPos);
+        telemetry.addData("Left Front Motor (2):",Double.toString(LFront.getCurrentPosition()));
+        telemetry.addData("Right Front Motor (1):",Double.toString(RFront.getCurrentPosition()));
+        telemetry.addData("Left Rear Motor (0):",Double.toString(LRear.getCurrentPosition()));
+        telemetry.addData("Right Rear Motor (3):",Double.toString(RRear.getCurrentPosition()));
         telemetry.update();
     }
 
     /**
      * main gryo drive function.
-     * All parameters are encoder ticks.
+     * All parameters are cm.
      * Twist is degrees.
      * @param twist is degrees to turn
      * @param strafe is how far sideways
@@ -259,22 +276,61 @@ public class AutoSampleGryo extends OpMode
         LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        while (LFront.isBusy() || LRear.isBusy() || RFront.isBusy() || RRear.isBusy()){
+        double adjust=5;
+        double LFDif=Math.abs(LFront.getCurrentPosition()-distances[0]);
+        double LRDif=Math.abs(LRear.getCurrentPosition()-distances[2]);
+        double RFDif=Math.abs(RFront.getCurrentPosition()-distances[1]);
+        double RRDif=Math.abs(RRear.getCurrentPosition()-distances[3]);
+        boolean exit=false;
+        while (!exit){
+            //get steering correction
             double steeringCorrection=getSteeringCorrection(targetdirection, rotationspeed);
-            RFront.setPower(speed+steeringCorrection);
-            RRear.setPower(speed+steeringCorrection);
-            LFront.setPower(speed-steeringCorrection);
-            LRear.setPower(speed-steeringCorrection);
+            //set motor power
+            RFront.setPower(speed-steeringCorrection);
+            RRear.setPower(speed-steeringCorrection);
+            LFront.setPower(speed+steeringCorrection);
+            LRear.setPower(speed+steeringCorrection);
             //telemetry
-            telemetry.addData("Left Front Motor (0):",Double.toString(LFront.getCurrentPosition()));
+            telemetry.addData("Left Front Motor (2):",Double.toString(LFront.getCurrentPosition()));
             telemetry.addData("Left Front Motor Target:",Double.toString(distances[0]));
             telemetry.addData("Right Front Motor (1):",Double.toString(RFront.getCurrentPosition()));
             telemetry.addData("Right Front Motor Target:",Double.toString(distances[1]));
-            telemetry.addData("Left Rear Motor (2):",Double.toString(LRear.getCurrentPosition()));
+            telemetry.addData("Left Rear Motor (0):",Double.toString(LRear.getCurrentPosition()));
             telemetry.addData("Left Rear Motor Target:",Double.toString(distances[2]));
             telemetry.addData("Right Rear Motor (3):",Double.toString(RRear.getCurrentPosition()));
             telemetry.addData("Right Rear Motor Target:",Double.toString(distances[3]));
+            telemetry.update();
+            //check for exit
+            if ((Math.abs(LFront.getCurrentPosition()-distances[0])>LFDif+50)){
+                exit=true;
+            }
+            else{
+                LFDif=Math.abs(LFront.getCurrentPosition()-distances[0]);
+            }
+            if ((Math.abs(LRear.getCurrentPosition()-distances[2])>LRDif+50)){
+                exit=true;
+            }
+            else{
+                LRDif=Math.abs(LRear.getCurrentPosition()-distances[2]);
+            }
+            if ((Math.abs(RFront.getCurrentPosition()-distances[1])>RFDif+50)){
+                exit=true;
+            }
+            else{
+                RFDif=Math.abs(RFront.getCurrentPosition()-distances[1]);
+            }
+            if ((Math.abs(RRear.getCurrentPosition()-distances[3])>RRDif+50)){
+                exit=true;
+            }
+            else{
+                RRDif=Math.abs(RRear.getCurrentPosition()-distances[3]);
+            }
         }
+        //stop motors
+        LFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        RFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        RRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     /**
@@ -311,7 +367,7 @@ public class AutoSampleGryo extends OpMode
      */
     public static double[] calculateWheelMovement(double xDistance, double yDistance, double turnAngle) {
         //wheel diameter
-        double diameter=537.7;
+        double diameter=9.6;
         // Define the wheel circumference
         double wheelCircumference = Math.PI * diameter;
         //Calculate total displacement
@@ -332,15 +388,36 @@ public class AutoSampleGryo extends OpMode
             leftRear *= turnCorrection;
             rightRear *= turnCorrection;
         }
+        leftFront=movementToEncoderTicks(leftFront);
+        rightFront=movementToEncoderTicks(rightFront);
+        leftRear=movementToEncoderTicks(leftRear);
+        rightRear=movementToEncoderTicks(rightRear);
         return new double[]{leftFront, rightFront, leftRear, rightRear};
     }
 
     /**
+     * Function to calculate motor encoder ticks from rotation distance.
+     * @param distance Distance rotated in cm.
+     * @return Number of encoder ticks travled.
+     */
+    public static double movementToEncoderTicks(double distance){
+        //Calculate diameter
+        double circumference=Math.PI*9.6;
+        //Calculate number of rotations
+        double rotations=distance/circumference;
+        //Calculate ticks per revolution (using formula given by GoBilda)
+        double ticksPerRevolution=((((1+(46/17))) * (1+(46/11))) * 28);
+        //Return number of encoder ticks
+        return rotations*ticksPerRevolution;
+    }
+
+    /**
      * wheel movement to robot movement
+     * calcuations are in cm.
      */
     public static double[] calculateRobotMovementFromWheel(double leftFront, double rightFront, double leftRear, double rightRear) {
         //wheel diameter
-        double diameter=537.7;
+        double diameter=9.6;
         // Define the wheel circumference
         double wheelCircumference = Math.PI * diameter;
         // Calculate the average wheel distance
@@ -409,7 +486,8 @@ public class AutoSampleGryo extends OpMode
      */
     @Override
     public void stop() {
-        assert true;
+        telemetry.addLine("Path Completed.");
+        telemetry.update();
     }
 
 }
