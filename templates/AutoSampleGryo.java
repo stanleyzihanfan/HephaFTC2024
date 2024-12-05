@@ -489,6 +489,21 @@ public class AutoSampleGryo extends OpMode
             wrist.setPosition(8.333);
         }
         telemetry.addData("Wrist position",wristPos);
+        //set linear slide position
+        if (linearpos<100){
+            linearpos=100;
+        }
+        else{
+            linearpos=linearpos;
+        }
+        telemetry.addData("linear Target:",linearpos);
+        linearR.setTargetPosition((int) (linearpos));
+        linearL.setTargetPosition((int) (linearpos));
+        ((DcMotorEx) linearR).setVelocity(1000);
+        ((DcMotorEx) linearL).setVelocity(1000);
+        linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //set wrist position
         //set intake power/speed
         intake.setPower(intakeSpeed);
     }
