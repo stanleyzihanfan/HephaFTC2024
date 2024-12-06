@@ -45,23 +45,11 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import java.lang.Math;
+import java.lang.Thread;
 
-/*
- * This file contains an example of an iterative (Non-Linear) "OpMode".
- * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
- * The names of OpModes appear on the menu of the FTC Driver Station.
- * When a selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all iterative OpModes contain.
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
- */
 @Autonomous
 
-public class AutoSampleGryo extends OpMode
+public class AutoGyroRight extends OpMode
 {
     //arm servo+motor declaration
     public DcMotor  armMotor    = null; //the arm motor
@@ -214,9 +202,16 @@ public class AutoSampleGryo extends OpMode
         
         //ADD MAIN CODE HERE
         //be sure to use telemetry and log all variables for debugging!
-        drivegyro(0, 3000, 1300, 0.2, 0.1);
-        drivegyro(0, -3000, -1300, 0.2, 0.1);
-        
+        drivegyro(0,0,900,0.75,0.05);
+        rotate(5,0.75);
+        drivegyro(0,1200,0,0.75,0.05);
+        drivegyro(0,0,1100,0.75,0.05);
+        drivegyro(0,900,0,0.75,0.05);
+        drivegyro(0,0,-2200,1,0.05);
+        drivegyro(0,0,2200,0.8,0.05);
+        drivegyro(0,500,0,0.75,0.05);
+        drivegyro(0,0,-2200,1,0.05);
+        drivegyro(0,0,2200,0.8,0.05);
     }
 
     /**
@@ -224,13 +219,57 @@ public class AutoSampleGryo extends OpMode
      */
     @Override
     public void loop() {
-        //Constantly set the arm positions, as the arm motor requires this to operate properly
+        //Constantly set the arm positions, as running motors with RUN_TO_POSITION requires this to operate properly.
         armToPosition(armPosition, wristPosition, intakeSpeed,linearPos);
         telemetry.addData("Left Front Motor (0):",Double.toString(LFront.getCurrentPosition()));
         telemetry.addData("Right Front Motor (3):",Double.toString(RFront.getCurrentPosition()));
         telemetry.addData("Left Rear Motor (2):",Double.toString(LRear.getCurrentPosition()));
         telemetry.addData("Right Rear Motor (1):",Double.toString(RRear.getCurrentPosition()));
         telemetry.update();
+    }
+    
+    public void rotate(double twist,double speed){
+        double targetdirection=getHeading()+twist;
+        if (Math.abs(targetdirection)>180){
+            if (targetdirection<0){
+                targetdirection=360+targetdirection;
+            }
+            else{
+                targetdirection=360-targetdirection;
+            }
+        }
+        boolean target=(getHeading()>targetdirection);
+        while ((getHeading()>targetdirection)==target){
+            if (target){
+                LFront.setPower(speed);
+                LRear.setPower(speed);
+                RFront.setPower(-speed);
+                RRear.setPower(-speed);
+                LFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+            else{
+                LFront.setPower(-speed);
+                LRear.setPower(-speed);
+                RFront.setPower(speed);
+                RRear.setPower(speed);
+                LFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+        }
+        LFront.setTargetPosition(LFront.getCurrentPosition());
+        LRear.setTargetPosition(LRear.getCurrentPosition());
+        RFront.setTargetPosition(RFront.getCurrentPosition());
+        RRear.setTargetPosition(RRear.getCurrentPosition());
+        //stop motors
+        LFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        LRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        RFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        RRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     /**
@@ -253,6 +292,7 @@ public class AutoSampleGryo extends OpMode
                 distances[i]=0;
             }
         }
+        //Calculate target wheel encoder position
         distances[0]=LFront.getCurrentPosition()+distances[0];
         distances[1]=RFront.getCurrentPosition()+distances[1];
         distances[2]=LRear.getCurrentPosition()+distances[2];
@@ -284,9 +324,11 @@ public class AutoSampleGryo extends OpMode
         boolean RF=(RFront.getCurrentPosition()>distances[1]);
         boolean RR=(RRear.getCurrentPosition()>distances[3]);
         while (true){
+            //call armToPosition to move arm motor+servos
+            armToPosition(armPosition, wristPosition, intakeSpeed,linearPos);
             //get steering correction
             double steeringCorrection=0;//getSteeringCorrection(targetdirection, rotationspeed);
-            //set motor power
+            //set motor power(setting it to negative if the wheel is going backwards, and 0 if it isn't moving)
             if (distances[1] < RFront.getCurrentPosition() ) { 
                 RFront.setPower((speed * -1) -steeringCorrection);
             }
@@ -296,7 +338,6 @@ public class AutoSampleGryo extends OpMode
             else {
                 RFront.setPower(speed - steeringCorrection);
             }
-
             if (distances[3] < RRear.getCurrentPosition() ) { 
                 RRear.setPower((speed * -1) -steeringCorrection);
             }
@@ -463,10 +504,12 @@ public class AutoSampleGryo extends OpMode
      * arm function
      */
     public void armToPosition(double armPos, double wristPos, double intakeSpeed, double linearpos){
+        //set intake power/speed
+        intake.setPower(intakeSpeed);
         //set arm motor target position
         armMotor.setTargetPosition((int)(armPos));
         //set motor velocity
-        ((DcMotorEx) armMotor).setVelocity(2100);
+        ((DcMotorEx) armMotor).setVelocity(2750);
         //run arm motor to position
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //telemetry if motor exceeded current limit
@@ -503,9 +546,6 @@ public class AutoSampleGryo extends OpMode
         ((DcMotorEx) linearL).setVelocity(1000);
         linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        //set wrist position
-        //set intake power/speed
-        intake.setPower(intakeSpeed);
     }
     
     /**
