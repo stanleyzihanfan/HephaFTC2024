@@ -231,7 +231,14 @@ public class MecanumWheelArm extends LinearOpMode{
             // Mecanum drive is controlled with three axes: drive (front-and-back),
             // strafe (left-and-right), and twist (rotating the whole chassis).
             double drive  = gamepad1.left_stick_y;
+            final double strafe_speed=0.75;
             double strafe = -gamepad1.left_stick_x;
+            if (gamepad1.dpad_left){
+                strafe=strafe_speed;
+            }
+            else if (gamepad1.dpad_right){
+                strafe=-strafe_speed;
+            }
             double twist  = -gamepad1.right_stick_x;
             telemetry.addData("drive: ", drive);
             telemetry.addData("strafe: ", strafe);
