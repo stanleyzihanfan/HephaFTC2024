@@ -197,7 +197,7 @@ public class MecanumWheelArm extends LinearOpMode{
             }
             //set linear slide position
             if (linearpos+linearMove*LINEARSHIFT*-1<50){
-                linearpos=50;
+                linearpos=100;
             }
             else{
             linearpos=linearpos+linearMove*LINEARSHIFT*-1;
