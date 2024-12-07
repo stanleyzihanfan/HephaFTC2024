@@ -49,7 +49,7 @@ import java.lang.Thread;
 
 @Autonomous
 
-public class AutoGyroRight extends OpMode
+public class AutoGyroSample extends OpMode
 {
     //arm servo+motor declaration
     public DcMotor  armMotor    = null; //the arm motor
@@ -202,18 +202,6 @@ public class AutoGyroRight extends OpMode
         
         //ADD MAIN CODE HERE
         //be sure to use telemetry and log all variables for debugging!
-        drivegyro(0,0,900,0.75,0.05);
-        rotate(5,0.75);
-        drivegyro(0,1200,0,0.75,0.05);
-        drivegyro(0,0,1200,0.75,0.05);
-        drivegyro(0,800,0,0.5,0.05);
-        drivegyro(0,0,-2200,0.7,0.05);
-        drivegyro(0,0,2200,0.7,0.05);
-        drivegyro(0,800,0,0.6,0.05);
-        drivegyro(0,0,-2500,1,0.05);
-        // drivegyro(0,0,2200,1,0.05);
-        // drivegyro(0,250,0,1,0.05);
-        // drivegyro(0,0,-2200,1,0.05);
     }
 
     /**
@@ -285,16 +273,28 @@ public class AutoGyroRight extends OpMode
      * @param rotationspeed is rotation speed
      * @return none
      */
-    public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed){
+    public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed, double time){
         //reset imu
         imu.resetYaw();
+        //get target heading
         double targetdirection=getHeading()+twist;
         //robot moves to the right when strafe is negative, left when positive
-        double distances[]=calculateWheelMovement(drive, strafe * -1);
+        double[] distances=calculateWheelMovement(drive, strafe * -1);
         for (int i=0;i<=3;i++){
             if (Math.abs(distances[i])<=5){
                 distances[i]=0;
             }
+        }
+        //caculate speeds
+        double[] speeds={speed+Math.abs(distances[0]/time),speed+Math.abs(distances[1]/time),speed+Math.abs(distances[2]/time),speed+Math.abs(distances[3]/time),speed+Math.abs(distances[4]/time)};
+        //get max speed
+        double max=speeds[0];
+        for (int i=0;i<=speeds.length;i++){
+            if (speeds[i]>max) max=speeds[i];
+        }
+        //normalize speeds if it is higher than max
+        if (max>1){
+            for (int i=0;i<=speeds.length;i++) speeds[i]/=max;
         }
         //Calculate target wheel encoder position
         distances[0]=LFront.getCurrentPosition()+distances[0];
@@ -322,7 +322,7 @@ public class AutoGyroRight extends OpMode
         LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //boolean values to show if the motor is ahead or behind the taget position
+        //boolean values to show if the motor is ahead or behind the target position
         boolean LF=(LFront.getCurrentPosition()>distances[0]);
         boolean LR=(LRear.getCurrentPosition()>distances[2]);
         boolean RF=(RFront.getCurrentPosition()>distances[1]);

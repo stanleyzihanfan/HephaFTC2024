@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
+import java.lang.Math;
 @TeleOp
 
 public class MecanumWheelArm extends LinearOpMode{
@@ -60,6 +61,12 @@ public class MecanumWheelArm extends LinearOpMode{
     final double LINEARSHIFT=14;
     //Change the constant to change how fast the arms moves during manual
     final double armShift=5*ARM_TICKS_PER_DEGREE;
+    //lowest arm motor speed
+    final int LOW_ARM_SPEED=2100;
+    //highest arm motor speed
+    final int HIGH_ARM_SPEED=4100;
+    //acceleration/deceleration speed
+    final int ARM_ACCELERATION=250;
     //Variables to make joystick presses not trigger constantly
     boolean leftStickPressed=false;
     boolean rightStickPressed=false;
@@ -144,20 +151,20 @@ public class MecanumWheelArm extends LinearOpMode{
             //arm positions
             if (gamepad2.right_bumper){
                 /* This is the correct height to score the sample in the HIGH BASKET */
-                armPosition = 2830;
-                linearpos=2500;
+                armPosition = 3060;
+                linearpos=2300;
                 wristPos=WRIST_FOLDED_OUT;
             }
             else if (gamepad2.y){
                 //reset arm
-                linearpos=50;
+                linearpos=100;
                 if (armPosition>1994){
                     armPosition=1994;
                 }
             }
             else if (gamepad2.left_bumper){
                 //this is the hight for the lower basket
-                armPosition=2500;
+                armPosition=2800;
                 wristPos=WRIST_FOLDED_OUT;
             }
             //set wrist to opposite position
@@ -196,7 +203,7 @@ public class MecanumWheelArm extends LinearOpMode{
                 armPosition=0;
             }
             //set linear slide position
-            if (linearpos+linearMove*LINEARSHIFT*-1<50){
+            if (linearpos+linearMove*LINEARSHIFT*-1<100){
                 linearpos=100;
             }
             else{
@@ -216,7 +223,7 @@ public class MecanumWheelArm extends LinearOpMode{
             We also set the target velocity (speed) the motor runs at, and use setMode to run it.*/
             armMotor.setTargetPosition((int) (armPosition));
             ((DcMotorEx) armMotor).setVelocity(2100);
-            armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             //teletmetry log
             telemetry.addData("wristmove:",wristPos);
             //telemetry if motor exceeded current limit

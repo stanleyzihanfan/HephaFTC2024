@@ -49,7 +49,7 @@ import java.lang.Thread;
 
 @Autonomous
 
-public class AutoGyroRight extends OpMode
+public class AutoGyroLeft extends OpMode
 {
     //arm servo+motor declaration
     public DcMotor  armMotor    = null; //the arm motor
@@ -202,18 +202,24 @@ public class AutoGyroRight extends OpMode
         
         //ADD MAIN CODE HERE
         //be sure to use telemetry and log all variables for debugging!
-        drivegyro(0,0,900,0.75,0.05);
-        rotate(5,0.75);
-        drivegyro(0,1200,0,0.75,0.05);
-        drivegyro(0,0,1200,0.75,0.05);
-        drivegyro(0,800,0,0.5,0.05);
-        drivegyro(0,0,-2200,0.7,0.05);
-        drivegyro(0,0,2200,0.7,0.05);
-        drivegyro(0,800,0,0.6,0.05);
-        drivegyro(0,0,-2500,1,0.05);
-        // drivegyro(0,0,2200,1,0.05);
-        // drivegyro(0,250,0,1,0.05);
-        // drivegyro(0,0,-2200,1,0.05);
+        drivegyro(0,0,900,0.7,0.05);
+        // rotate(-5,0.75);
+        drivegyro(0,-1400,0,0.7,0.05);
+        drivegyro(0,0,1400,0.7,0.05);
+        drivegyro(0,-600,0,0.6,0.05);
+        rotate(-1,0.6);
+        drivegyro(0,0,-2800,0.7,0.05);
+        drivegyro(0,0,2800,0.7,0.05);
+        rotate(1,0.6);
+        drivegyro(0,-500,0,0.6,0.05);
+        drivegyro(0,0,-2800,0.7,0.05);
+        armPosition=3000;
+        wristPosition=0.5;
+        drivegyro(0,0,2800,0.7,0.05);
+        rotate(-85,0.6);
+        drivegyro(0,0,1300,0.6,0.5);
+        armPosition=3700;
+        
     }
 
     /**
@@ -286,8 +292,6 @@ public class AutoGyroRight extends OpMode
      * @return none
      */
     public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed){
-        //reset imu
-        imu.resetYaw();
         double targetdirection=getHeading()+twist;
         //robot moves to the right when strafe is negative, left when positive
         double distances[]=calculateWheelMovement(drive, strafe * -1);
