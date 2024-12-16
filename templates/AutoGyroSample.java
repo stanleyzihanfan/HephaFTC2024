@@ -202,7 +202,12 @@ public class AutoGyroSample extends OpMode
         
         //ADD MAIN CODE HERE
         //be sure to use telemetry and log all variables for debugging!
-        drivegyro(0, 3000, 1000, 0.1, 0.01, 5);
+        drivegyro(0,1000,1000,0.1,0.01,500);
+        //forward 17.26 in.
+        //right 13.75 in.
+        //diag right 13.75 in.
+        //diag forward 15.76 in.
+        // drivegyro(0, -3000, -1000, 0.1, 0.01, 1000);
     }
 
     /**
@@ -288,12 +293,12 @@ public class AutoGyroSample extends OpMode
         double[] speeds={Math.abs(distances[0]/time),Math.abs(distances[1]/time),Math.abs(distances[2]/time),Math.abs(distances[3]/time)};
         //get max speed
         double max=speeds[0];
-        for (int i=0;i<=speeds.length;i++){
+        for (int i=0;i<speeds.length;i++){
             if (speeds[i]>max) max=speeds[i];
         }
         //normalize speeds if it is higher than max
         if (max>speed){
-            for (int i=0;i<=speeds.length;i++) speeds[i]=speeds[i]/max*speed;
+            for (int i=0;i<speeds.length;i++) speeds[i]=speeds[i]/max*speed;
         }
         //Calculate target wheel encoder position
         distances[0]=LFront.getCurrentPosition()+distances[0];
@@ -326,45 +331,45 @@ public class AutoGyroSample extends OpMode
             //call armToPosition to move arm motor+servos
             armToPosition(armPosition, wristPosition, intakeSpeed,linearPos);
             //get steering correction
-            double steeringCorrection=0;//getSteeringCorrection(targetdirection, rotationspeed);
+            double steeringCorrection=getSteeringCorrection(targetdirection, rotationspeed);
             //set motor power(setting it to negative if the wheel is going backwards, and 0 if it isn't moving)
             if (distances[1] < RFront.getCurrentPosition() ) { 
-                RFront.setPower((speeds[1] * -1) -steeringCorrection);
+                RFront.setPower((speeds[1] * -1) +steeringCorrection);
             }
             else if (distances[1] == RFront.getCurrentPosition()) {
                 RFront.setPower(0);
             }
             else {
-                RFront.setPower(speeds[1] - steeringCorrection);
+                RFront.setPower(speeds[1] + steeringCorrection);
             }
             if (distances[3] < RRear.getCurrentPosition() ) { 
-                RRear.setPower((speeds[3] * -1) -steeringCorrection);
+                RRear.setPower((speeds[3] * -1) +steeringCorrection);
             }
             else if (distances[3] == RRear.getCurrentPosition()) {
                 RRear.setPower(0);
             }
             else {
-                RRear.setPower(speeds[3] - steeringCorrection);
+                RRear.setPower(speeds[3] + steeringCorrection);
             }
             
             if (distances[0] < LFront.getCurrentPosition() ) { 
-                LFront.setPower((speeds[0] * -1) + steeringCorrection);
+                LFront.setPower((speeds[0] * -1) - steeringCorrection);
             }
             else if (distances[0] == LFront.getCurrentPosition()) {
                 LFront.setPower(0);
             }
             else {
-                LFront.setPower(speeds[0] + steeringCorrection);
+                LFront.setPower(speeds[0] - steeringCorrection);
             }
             
             if (distances[2] < LRear.getCurrentPosition() ) { 
-                LRear.setPower((speeds[2] * -1) + steeringCorrection);
+                LRear.setPower((speeds[2] * -1) - steeringCorrection);
             }
             else if (distances[2] == LRear.getCurrentPosition()) {
                 LRear.setPower(0);
             }
             else {
-                LRear.setPower(speeds[2] + steeringCorrection);
+                LRear.setPower(speeds[2] - steeringCorrection);
             }
         
             //telemetry
@@ -378,19 +383,11 @@ public class AutoGyroSample extends OpMode
             telemetry.addData("Right Rear Motor Target:",Double.toString(distances[3]));
             telemetry.update();
             //check for exit
-            if (!((LFront.getCurrentPosition()>distances[0])==LF)){
-                LFront.setPower(0);
-            }
-            if (!((LRear.getCurrentPosition()>distances[2])==LR)){
-                LRear.setPower(0);
-            }
-            if (!((RFront.getCurrentPosition()>distances[1])==RF)){
-                RFront.setPower(0);
-            }
-            if (!((RRear.getCurrentPosition()>distances[3])==RR)){
-                RRear.setPower(0);
-            }
             if (!((LFront.getCurrentPosition()>distances[0])==LF) && !((LRear.getCurrentPosition()>distances[2])==LR) && !((RFront.getCurrentPosition()>distances[1])==RF) && !((RRear.getCurrentPosition()>distances[3])==RR)){
+                LFront.setPower(0);
+                LRear.setPower(0);
+                RFront.setPower(0);
+                RRear.setPower(0);
                 break;
             }
             
