@@ -271,19 +271,25 @@ public class AutoGyroSample extends OpMode
     /**
      * main gryo drive function.
      * All parameters are cm.
+     * Give ~0.5 cm tolerance(especialy for drive).
      * Twist is degrees.
      * @param twist is degrees to turn
      * @param strafe is how far sideways
      * @param drive is how far forwards
      * @param speed is drive speed
      * @param rotationspeed is rotation speed
+     * @param time is the amount of parts it should divide the length into
+     * (this controls speed, but will get less effective the higher the distance)
      * @return none
      */
     public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed, double time){
         //get target heading
         double targetdirection=getHeading()+twist;
+        //change distance to movement units
+        double newdrive=movementToDistanceUnits(drive, strafe)[0];
+        double newstrafe=movementToDistanceUnits(drive, strafe)[1];
         //robot moves to the right when strafe is negative, left when positive
-        double[] distances=calculateWheelMovement(drive, strafe * -1);
+        double[] distances=calculateWheelMovement(newdrive, newstrafe * -1);
         for (int i=0;i<=3;i++){
             if (Math.abs(distances[i])<=5){
                 distances[i]=0;
@@ -412,7 +418,7 @@ public class AutoGyroSample extends OpMode
         // Normalize the error to be within +/- 180 degrees
         while (headingError > 180)  headingError -= 360;
         while (headingError <= -180) headingError += 360;
-        // Multiply the error by the gain to determine the required steering correction/  Limit the result to +/- 1.0
+        // Multiply the error by the gain to determine the required steering correction. Limit the result to +/- 1.0
         return Range.clip(headingError * proportionalGain, -1, 1);
     }
 
@@ -445,40 +451,21 @@ public class AutoGyroSample extends OpMode
     }
 
     /**
-     * Function to calculate motor encoder ticks from rotation distance.
-     * @param distance Distance rotated in cm.
-     * @return Number of encoder ticks travled.
+     * Function to calculate distance units from rotation distance.
+     * @param xdistance Distance moved forwards in cm.
+     * @param ydistance Distance moved right in cm.
+     * @return Double list of movement units traveled.
      */
-    public static double movementToEncoderTicks(double distance){
-        //Calculate diameter
-        double circumference=Math.PI*9.6;
-        //Calculate number of rotations
-        double rotations=distance/circumference;
-        //Calculate ticks per revolution (using formula given by GoBilda)
-        double ticksPerRevolution=((((1+(46/17))) * (1+(46/11))) * 28);
-        //Return number of encoder ticks
-        return rotations*ticksPerRevolution;
-    }
-
-    /**
-     * wheel movement to robot movement
-     * calcuations are in cm.
-     */
-    public static double[] calculateRobotMovementFromWheel(double leftFront, double rightFront, double leftRear, double rightRear) {
-        //wheel diameter
-        double diameter=9.6;
-        // Define the wheel circumference
-        double wheelCircumference = Math.PI * diameter;
-        // Calculate the average wheel distance
-        double averageDistance = (leftFront + rightFront + leftRear + rightRear) / 4;
-        // Calculate the total distance moved
-        double totalDistance = (leftFront + leftRear + rightFront + rightRear) / 4;
-        // Calculate the x and y distances
-        double xDistance = (leftFront - rightFront + leftRear - rightRear) / wheelCircumference;
-        double yDistance = (leftFront + rightFront - leftRear - rightRear) / wheelCircumference;
-        // Calculate the rotation
-        double rotation = (leftFront + rightFront + leftRear + rightRear) / wheelCircumference;
-        return new double[]{xDistance, yDistance, rotation};
+    public static double[] movementToDistanceUnits(double xdistance, double ydistance){
+        //forward 17.26 in., 43.8404 cm. --> 0.0438404cm/MU
+        //right 13.75 in., 34.925 cm. --> 0.034925cm/MU
+        //diag right 13.75 in., 34.925 cm. --> 0.034925/MU
+        //diag forward 15.76 in., 40.0304 cm. --> 0.0400304cm/MU
+        //average 0.0419372cm/MU forward
+        double finalY=ydistance/0.034925;
+        double finalX=xdistance/0.0419372;
+        double[] ans={finalX,finalY};
+        return ans;
     }
     /**
      * Wait Function
