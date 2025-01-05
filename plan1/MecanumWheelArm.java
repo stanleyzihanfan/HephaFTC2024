@@ -15,7 +15,7 @@ import java.lang.Math;
 public class MecanumWheelArm extends LinearOpMode{
     //arm servo+motor declaration
     public DcMotor  armMotor    = null; //the arm motor
-    public CRServo  intake      = null; //the active intake servo
+    public Servo  intake      = null; //the active intake servo
     public Servo    wrist       = null; //the wrist servo
     // drivetrain wheel motor declaration
     private DcMotor wheel_0=null;
@@ -38,9 +38,8 @@ public class MecanumWheelArm extends LinearOpMode{
     final double ARM_SCORE_SAMPLE_IN_LOW   = 160 * ARM_TICKS_PER_DEGREE;
     final double ARM_ATTACH_HANGING_HOOK   = 120 * ARM_TICKS_PER_DEGREE;
     final double ARM_WINCH_ROBOT           = 15  * ARM_TICKS_PER_DEGREE;
-    final double INTAKE_COLLECT    = -1.0;
-    final double INTAKE_OFF        =  0.0;
-    final double INTAKE_DEPOSIT    =  0.5;
+    final double INTAKE_COLLECT    = 0.3;
+    final double INTAKE_DEPOSIT    = 0.55;
     final double WRIST_FOLDED_IN   = 0.8333;
     final double WRIST_FOLDED_OUT  = 0.5;
     //adjust this variable to change how much the arm adjudsts by for the left and right triggers.
@@ -52,7 +51,7 @@ public class MecanumWheelArm extends LinearOpMode{
     boolean wristLocation=true;
     //varaibles for wrist
     //change wristShift to change how fast the wrist moves.
-    final double wristShift = 0.05;
+    final double wristShift = 0.005;
     double wristPos=WRIST_FOLDED_IN;
     double wristmove;
     //variable for where the linear slides are
@@ -110,9 +109,9 @@ public class MecanumWheelArm extends LinearOpMode{
         linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         linearL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         /* Define and initialize servos.*/
-        intake = hardwareMap.get(CRServo.class, "servo_intake");
+        intake = hardwareMap.get(Servo.class, "servo_intake");
         wrist  = hardwareMap.get(Servo.class, "servo_rotate");
-        intake.setPower(INTAKE_OFF);
+        intake.setPosition(INTAKE_DEPOSIT);
         wrist.setPosition(WRIST_FOLDED_IN);
         //telemetry message to signify robot waiting
         telemetry.addLine("Robot Ready.");
@@ -120,16 +119,15 @@ public class MecanumWheelArm extends LinearOpMode{
         //wait for driver to press play
         waitForStart();
         //repeat untill opmode ends
+        //testing
         while (opModeIsActive()){
-            //manual intake control
             if (gamepad2.a) {
-                intake.setPower(INTAKE_COLLECT);
-            }
-            else if (gamepad2.x) {
-                intake.setPower(INTAKE_OFF);
+                //close claw
+                intake.setPosition(INTAKE_COLLECT);
             }
             else if (gamepad2.b) {
-                intake.setPower(INTAKE_DEPOSIT);
+                //open claw
+                intake.setPosition(INTAKE_DEPOSIT);
             }
             //Manual code
             //Wrist movement intake
@@ -139,14 +137,14 @@ public class MecanumWheelArm extends LinearOpMode{
             //linear slide movement
             double linearMove=gamepad2.right_stick_y;
             //make sure the wrist is within range
-            if ((wristPos+(wristShift*wristmove))<=0.8333 && (wristPos+(wristShift*wristmove))>=0.1667){
+            if ((wristPos+(wristShift*wristmove))<=1 && (wristPos+(wristShift*wristmove))>=0.07){
                 wristPos=wristPos+(wristShift*wristmove);
             }
-            if (wristPos+(wristShift*wristmove)>0.8333){
-                wristPos=0.8333;
+            if (wristPos+(wristShift*wristmove)>1){
+                wristPos=1;
             }
-            if (wristPos+(wristShift*wristmove)<0.1667){
-                wristPos=0.1667;
+            if (wristPos+(wristShift*wristmove)<0.07){
+                wristPos=0.07;
             }
             //arm positions
             if (gamepad2.right_bumper){
@@ -223,7 +221,7 @@ public class MecanumWheelArm extends LinearOpMode{
             We also set the target velocity (speed) the motor runs at, and use setMode to run it.*/
             armMotor.setTargetPosition((int) (armPosition));
             ((DcMotorEx) armMotor).setVelocity(2100);
-            armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             //teletmetry log
             telemetry.addData("wristmove:",wristPos);
             //telemetry if motor exceeded current limit
