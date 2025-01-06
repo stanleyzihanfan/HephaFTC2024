@@ -1,5 +1,10 @@
 package org.firstinspires.ftc.teamcode;
-
+//high basket
+//linear 2150
+//wrist ver. 0.8
+//wristhor 0.15
+//arm 2800
+//
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -64,7 +69,7 @@ public class MecanumWheelArm extends LinearOpMode{
     //how fast the linear slide moves
     final double LINEARSHIFT=14;
     //Change the constant to change how fast the arms moves during manual
-    final double armShift=5*ARM_TICKS_PER_DEGREE;
+    final double armShift=3*ARM_TICKS_PER_DEGREE;
     //lowest arm motor speed
     final int LOW_ARM_SPEED=2100;
     //highest arm motor speed
@@ -126,18 +131,32 @@ public class MecanumWheelArm extends LinearOpMode{
         //wait for driver to press play
         waitForStart();
         //repeat untill opmode ends
+        //claw position
+        double clawpos=claw_DEPOSIT;
         //testing
+        boolean test=false;
         while (opModeIsActive()){
             if (gamepad2.a) {
                 //close claw
-                claw.setPosition(claw_COLLECT);
+                clawpos=claw_COLLECT;
                 telemetry.addData("Claw:","Collect");
             }
             else if (gamepad2.b) {
                 //open claw
-                claw.setPosition(claw_DEPOSIT);
+                clawpos=claw_DEPOSIT;
                 telemetry.addData("Claw: ","Deposit");
             }
+            //telemetry if motor exceeded current limit
+            if (((DcMotorEx) armMotor).isOverCurrent()){
+                telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
+                clawpos=claw_DEPOSIT;
+                test=true;
+            }
+            if (test){
+                telemetry.addLine("TEST");
+            }
+            //apply claw position
+            claw.setPosition(clawpos);
             //Manual code
             //wrist_horizontal movement
             if (gamepad2.dpad_up){
@@ -262,10 +281,6 @@ public class MecanumWheelArm extends LinearOpMode{
             //teletmetry log
             telemetry.addData("wrist_verticalmove:",wrist_verticalPos);
             telemetry.addData("wrist_horizontalmove:",wrist_horizontalPos);
-            //telemetry if motor exceeded current limit
-            if (((DcMotorEx) armMotor).isOverCurrent()){
-                telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
-            }
             /* send telemetry to the driver of the arm's current position and target position */
             telemetry.addData("armTarget: ", armMotor.getTargetPosition());
             telemetry.addData("arm Encoder: ", armMotor.getCurrentPosition());
@@ -273,9 +288,9 @@ public class MecanumWheelArm extends LinearOpMode{
             //below is drivetrain
             // Mecanum drive is controlled with three axes: drive (front-and-back),
             // strafe (left-and-right), and twist (rotating the whole chassis).
-            double drive  = gamepad1.left_stick_y;
+            double drive  = gamepad1.left_stick_y*0.75;
             final double strafe_speed=0.75;
-            double strafe = -gamepad1.left_stick_x;
+            double strafe = -gamepad1.left_stick_x*0.75;
             if (gamepad1.dpad_left){
                 strafe=strafe_speed;
             }
