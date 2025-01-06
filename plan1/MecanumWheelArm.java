@@ -10,9 +10,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import java.lang.Math;
-import java.rmi.server.ServerCloneException;
-import java.rmi.server.ServerNotActiveException;
-import javax.sql.rowset.serial.SerialJavaObject;
 @TeleOp
 
 public class MecanumWheelArm extends LinearOpMode{
@@ -44,7 +41,7 @@ public class MecanumWheelArm extends LinearOpMode{
     final double ARM_WINCH_ROBOT           = 15  * ARM_TICKS_PER_DEGREE;
     final double claw_COLLECT    = 0.3;
     final double claw_DEPOSIT    = 0.55;
-    final double wrist_vertical_FOLDED_IN   = 0.8333;
+    final double wrist_vertical_FOLDED_IN   = 1;
     final double wrist_vertical_FOLDED_OUT  = 0.5;
     //adjust this variable to change how much the arm adjudsts by for the left and right triggers.
     final double FUDGE_FACTOR = 15 * ARM_TICKS_PER_DEGREE;
@@ -57,11 +54,11 @@ public class MecanumWheelArm extends LinearOpMode{
     //change wrist_horizontalShift to change how fast the wrist_horizontal moves.
     final double wrist_verticalShift = 0.05;
     double wrist_verticalPos=wrist_vertical_FOLDED_IN;
-    double wrist_verticalmove;
+    double wrist_verticalmove=wrist_vertical_FOLDED_IN;
     //variables for wrist_horizontal
     final double wrist_horizontalShift = 0.05;
-    double wrist_horizontalPos=0.5;
-    double wrist_horizontalmove;
+    double wrist_horizontalPos=0;
+    double wrist_horizontalmove=0;
     //variable for where the linear slides are
     double linearpos=0;
     //how fast the linear slide moves
@@ -134,29 +131,55 @@ public class MecanumWheelArm extends LinearOpMode{
             if (gamepad2.a) {
                 //close claw
                 claw.setPosition(claw_COLLECT);
+                telemetry.addData("Claw:","Collect");
             }
             else if (gamepad2.b) {
                 //open claw
                 claw.setPosition(claw_DEPOSIT);
+                telemetry.addData("Claw: ","Deposit");
             }
             //Manual code
             //wrist_horizontal movement
-            wrist_verticalmove=gamepad2.dpad_down*wrist_verticalShift*-1+gamepad2.dpad_up*wrist_verticalShift;
+            if (gamepad2.dpad_up){
+                wrist_verticalmove-=wrist_verticalShift;
+            }
+            if (gamepad2.dpad_down){
+                wrist_verticalmove+=wrist_verticalShift;
+            }
             //wrist_vertical movement
-            wrist_horizontalmove=gamepad2.dpad_left*wrist_horizontalShift*-1+gamepad2.dpad_right*wrist_horizontalShift;
+            if (gamepad2.dpad_left){
+                wrist_horizontalmove-=wrist_horizontalShift;
+            }
+            if (gamepad2.dpad_right){
+                wrist_horizontalmove+=wrist_horizontalShift;
+            }
             //arm movement
             double armmove=gamepad2.left_stick_y;
             //linear slide movement
             double linearMove=gamepad2.right_stick_y;
             //make sure the wrist_vertical is within range
-            if ((wrist_verticalPos+(wrist_verticalShift*wrist_verticalmove))<=1 && (wrist_verticalPos+(wrist_verticalShift*wrist_verticalmove))>=0.07){
-                wrist_verticalPos=wrist_verticalPos+(wrist_verticalShift*wrist_verticalmove);
+            if (wrist_verticalmove<=1 && wrist_verticalmove>=0.07){
+                wrist_verticalPos=wrist_verticalmove;
             }
-            if (wrist_verticalPos+(wrist_verticalShift*wrist_verticalmove)>1){
+            else if (wrist_verticalmove>1){
                 wrist_verticalPos=1;
+                wrist_verticalmove=1;
             }
-            if (wrist_verticalPos+(wrist_verticalShift*wrist_verticalmove)<0.07){
+            else if (wrist_verticalmove<0.07){
                 wrist_verticalPos=0.07;
+                wrist_verticalmove=0.07;
+            }
+            //make sure wrist_horizontal is within range
+            if (wrist_horizontalmove<=1 && wrist_horizontalmove>=0){
+                wrist_horizontalPos=wrist_horizontalmove;
+            }
+            else if (wrist_horizontalmove>1){
+                wrist_horizontalPos=1;
+                wrist_horizontalmove=1;
+            }
+            else if (wrist_horizontalmove<0){
+                wrist_horizontalPos=0;
+                wrist_horizontalmove=0;
             }
             //arm positions
             if (gamepad2.right_bumper){
