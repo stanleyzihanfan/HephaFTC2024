@@ -10,13 +10,17 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import java.lang.Math;
+import java.rmi.server.ServerCloneException;
+import java.rmi.server.ServerNotActiveException;
+import javax.sql.rowset.serial.SerialJavaObject;
 @TeleOp
 
 public class MecanumWheelArm extends LinearOpMode{
     //arm servo+motor declaration
-    public DcMotor  armMotor    = null; //the arm motor
-    public Servo  intake      = null; //the active intake servo
-    public Servo    wrist       = null; //the wrist servo
+    public DcMotor  armMotor         = null; //the arm motor
+    public Servo    claw             = null; //the active claw servo
+    public Servo    wrist_horizontal = null; //the wrist horizontal servo
+    public Servo    wrist_vertical   = null; //the wrist vertical servo
     // drivetrain wheel motor declaration
     private DcMotor wheel_0=null;
     private DcMotor wheel_1=null;
@@ -38,22 +42,26 @@ public class MecanumWheelArm extends LinearOpMode{
     final double ARM_SCORE_SAMPLE_IN_LOW   = 160 * ARM_TICKS_PER_DEGREE;
     final double ARM_ATTACH_HANGING_HOOK   = 120 * ARM_TICKS_PER_DEGREE;
     final double ARM_WINCH_ROBOT           = 15  * ARM_TICKS_PER_DEGREE;
-    final double INTAKE_COLLECT    = 0.3;
-    final double INTAKE_DEPOSIT    = 0.55;
-    final double WRIST_FOLDED_IN   = 0.8333;
-    final double WRIST_FOLDED_OUT  = 0.5;
+    final double claw_COLLECT    = 0.3;
+    final double claw_DEPOSIT    = 0.55;
+    final double wrist_vertical_FOLDED_IN   = 0.8333;
+    final double wrist_vertical_FOLDED_OUT  = 0.5;
     //adjust this variable to change how much the arm adjudsts by for the left and right triggers.
     final double FUDGE_FACTOR = 15 * ARM_TICKS_PER_DEGREE;
     //variables used to set the arm to a specific position.
     double armPosition = (int)ARM_COLLAPSED_INTO_ROBOT;
     double armPositionFudgeFactor;
-    //variable for if wrist is out or not(true is in, false is out)
-    boolean wristLocation=true;
-    //varaibles for wrist
-    //change wristShift to change how fast the wrist moves.
-    final double wristShift = 0.005;
-    double wristPos=WRIST_FOLDED_IN;
-    double wristmove;
+    //variable for if wrist_vertical is out or not(true is in, false is out)
+    boolean wrist_verticalLocation=true;
+    //varaibles for wrist_horizontal
+    //change wrist_horizontalShift to change how fast the wrist_horizontal moves.
+    final double wrist_verticalShift = 0.05;
+    double wrist_verticalPos=wrist_vertical_FOLDED_IN;
+    double wrist_verticalmove;
+    //variables for wrist_horizontal
+    final double wrist_horizontalShift = 0.05;
+    double wrist_horizontalPos=0.5;
+    double wrist_horizontalmove;
     //variable for where the linear slides are
     double linearpos=0;
     //how fast the linear slide moves
@@ -109,10 +117,12 @@ public class MecanumWheelArm extends LinearOpMode{
         linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         linearL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         /* Define and initialize servos.*/
-        intake = hardwareMap.get(Servo.class, "servo_intake");
-        wrist  = hardwareMap.get(Servo.class, "servo_rotate");
-        intake.setPosition(INTAKE_DEPOSIT);
-        wrist.setPosition(WRIST_FOLDED_IN);
+        claw = hardwareMap.get(Servo.class, "servo_claw");
+        wrist_horizontal  = hardwareMap.get(Servo.class, "servo_horizontal");
+        wrist_vertical=hardwareMap.get(Servo.class,"servo_vertical");
+        claw.setPosition(claw_DEPOSIT);
+        wrist_vertical.setPosition(wrist_vertical_FOLDED_IN);
+        wrist_horizontal.setPosition(wrist_horizontalPos);
         //telemetry message to signify robot waiting
         telemetry.addLine("Robot Ready.");
         telemetry.update();
@@ -123,35 +133,37 @@ public class MecanumWheelArm extends LinearOpMode{
         while (opModeIsActive()){
             if (gamepad2.a) {
                 //close claw
-                intake.setPosition(INTAKE_COLLECT);
+                claw.setPosition(claw_COLLECT);
             }
             else if (gamepad2.b) {
                 //open claw
-                intake.setPosition(INTAKE_DEPOSIT);
+                claw.setPosition(claw_DEPOSIT);
             }
             //Manual code
-            //Wrist movement intake
-            wristmove=gamepad2.right_trigger-gamepad2.left_trigger;
+            //wrist_horizontal movement
+            wrist_verticalmove=gamepad2.dpad_down*wrist_verticalShift*-1+gamepad2.dpad_up*wrist_verticalShift;
+            //wrist_vertical movement
+            wrist_horizontalmove=gamepad2.dpad_left*wrist_horizontalShift*-1+gamepad2.dpad_right*wrist_horizontalShift;
             //arm movement
             double armmove=gamepad2.left_stick_y;
             //linear slide movement
             double linearMove=gamepad2.right_stick_y;
-            //make sure the wrist is within range
-            if ((wristPos+(wristShift*wristmove))<=1 && (wristPos+(wristShift*wristmove))>=0.07){
-                wristPos=wristPos+(wristShift*wristmove);
+            //make sure the wrist_vertical is within range
+            if ((wrist_verticalPos+(wrist_verticalShift*wrist_verticalmove))<=1 && (wrist_verticalPos+(wrist_verticalShift*wrist_verticalmove))>=0.07){
+                wrist_verticalPos=wrist_verticalPos+(wrist_verticalShift*wrist_verticalmove);
             }
-            if (wristPos+(wristShift*wristmove)>1){
-                wristPos=1;
+            if (wrist_verticalPos+(wrist_verticalShift*wrist_verticalmove)>1){
+                wrist_verticalPos=1;
             }
-            if (wristPos+(wristShift*wristmove)<0.07){
-                wristPos=0.07;
+            if (wrist_verticalPos+(wrist_verticalShift*wrist_verticalmove)<0.07){
+                wrist_verticalPos=0.07;
             }
             //arm positions
             if (gamepad2.right_bumper){
                 /* This is the correct height to score the sample in the HIGH BASKET */
                 armPosition = 3060;
                 linearpos=2300;
-                wristPos=WRIST_FOLDED_OUT;
+                wrist_verticalPos=wrist_vertical_FOLDED_OUT;
             }
             else if (gamepad2.y){
                 //reset arm
@@ -163,23 +175,23 @@ public class MecanumWheelArm extends LinearOpMode{
             else if (gamepad2.left_bumper){
                 //this is the hight for the lower basket
                 armPosition=2800;
-                wristPos=WRIST_FOLDED_OUT;
+                wrist_verticalPos=wrist_vertical_FOLDED_OUT;
             }
-            //set wrist to opposite position
+            //set wrist_vertical to opposite position
             else if (gamepad2.right_stick_button && !rightStickPressed){
-                if (wristPos>0.6666){
-                    wristLocation=false;
+                if (wrist_verticalPos>0.6666){
+                    wrist_verticalLocation=false;
                 }
                 else{
-                    wristLocation=true;
+                    wrist_verticalLocation=true;
                 }
-                if (wristLocation){
-                    wristPos=WRIST_FOLDED_IN;
-                    wristLocation=false;
+                if (wrist_verticalLocation){
+                    wrist_verticalPos=wrist_vertical_FOLDED_IN;
+                    wrist_verticalLocation=false;
                 }
-                else if (!wristLocation){
-                    wristPos=WRIST_FOLDED_OUT;
-                    wristLocation=true;
+                else if (!wrist_verticalLocation){
+                    wrist_verticalPos=wrist_vertical_FOLDED_OUT;
+                    wrist_verticalLocation=true;
                 }
                 rightStickPressed=true;
             }
@@ -214,8 +226,10 @@ public class MecanumWheelArm extends LinearOpMode{
             ((DcMotorEx) linearL).setVelocity(2000);
             linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            //set wrist position
-            wrist.setPosition(wristPos);
+            //set wrist_vertical position
+            wrist_vertical.setPosition(wrist_verticalPos);
+            //set wrist_horizontal position
+            wrist_horizontal.setPosition(wrist_horizontalPos);
             /* Here we set the target position of our arm to match the variable that was selected
             by the driver.
             We also set the target velocity (speed) the motor runs at, and use setMode to run it.*/
@@ -223,7 +237,8 @@ public class MecanumWheelArm extends LinearOpMode{
             ((DcMotorEx) armMotor).setVelocity(2100);
             armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             //teletmetry log
-            telemetry.addData("wristmove:",wristPos);
+            telemetry.addData("wrist_verticalmove:",wrist_verticalPos);
+            telemetry.addData("wrist_horizontalmove:",wrist_horizontalPos);
             //telemetry if motor exceeded current limit
             if (((DcMotorEx) armMotor).isOverCurrent()){
                 telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
