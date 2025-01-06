@@ -53,7 +53,7 @@ public class AutoGyroRight extends OpMode
 {
     //arm servo+motor declaration
     public DcMotor  armMotor    = null; //the arm motor
-    public CRServo  intake      = null; //the active intake servo
+    public Servo  intake      = null; //the active intake servo
     public Servo    wrist       = null; //the wrist servo
     // drivetrain wheel motor declaration
     private DcMotor LFront=null;
@@ -82,7 +82,6 @@ public class AutoGyroRight extends OpMode
     final double ARM_ATTACH_HANGING_HOOK   = 120 * ARM_TICKS_PER_DEGREE;
     final double ARM_WINCH_ROBOT           = 15  * ARM_TICKS_PER_DEGREE;
     final double INTAKE_COLLECT    = -1.0;
-    final double INTAKE_OFF        =  0.0;
     final double INTAKE_DEPOSIT    =  0.5;
     final double WRIST_FOLDED_IN   = 0.8333;
     final double WRIST_FOLDED_OUT  = 0.5;
@@ -91,7 +90,7 @@ public class AutoGyroRight extends OpMode
     //variables used to set the arm to a specific position.
     double armPosition = (int)ARM_COLLAPSED_INTO_ROBOT;
     double wristPosition = WRIST_FOLDED_IN;
-    double intakeSpeed = INTAKE_OFF;
+    double intakeSpeed = INTAKE_DEPOSIT;
     double linearPos = 0;
 
     /**
@@ -156,7 +155,7 @@ public class AutoGyroRight extends OpMode
         /*This sets the maximum current that the control hub will apply to the arm before throwing a flag */
         ((DcMotorEx) armMotor).setCurrentAlert(5,CurrentUnit.AMPS);
         //define servos
-        intake = hardwareMap.get(CRServo.class, "servo_intake");
+        intake = hardwareMap.get(Servo.class, "servo_intake");
         wrist  = hardwareMap.get(Servo.class, "servo_rotate");
         //Log that initialization is complete.
         telemetry.addData("Status: ", "Initialized");
@@ -507,9 +506,10 @@ public class AutoGyroRight extends OpMode
     /**
      * arm function
      */
-    public void armToPosition(double armPos, double wristPos, double intakeSpeed, double linearpos){
+    public void armToPosition(double armPos, double wristPos, double intakePosition, double linearpos){
         //set intake power/speed
-        intake.setPower(intakeSpeed);
+        if (intakePosition>)
+        intake.setPosition(intakePosition);
         //set arm motor target position
         armMotor.setTargetPosition((int)(armPos));
         //set motor velocity

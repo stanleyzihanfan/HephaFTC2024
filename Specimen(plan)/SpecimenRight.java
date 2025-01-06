@@ -208,7 +208,7 @@ public class SpecimenRight extends OpMode
         drivegyro(0,0,5,0.3,0.01,1);
         waitForTime(0.5);
         armPosition=3900;
-        waitForTime(0.1);
+        waitForTime(0.3);
         intakeSpeed=INTAKE_DEPOSIT;
         waitForTime(1);
         // drivegyro(0,10,-10,0.3,0.01,2);

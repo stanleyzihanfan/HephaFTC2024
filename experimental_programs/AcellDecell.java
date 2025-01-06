@@ -127,10 +127,10 @@ public class AcellDecell extends OpMode
         linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         linearL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //initiate drivetrain motors
-        LFront   = hardwareMap.get(DcMotor.class, "wheel_0");
-        LRear    = hardwareMap.get(DcMotor.class, "wheel_1");
-        RFront   = hardwareMap.get(DcMotor.class, "wheel_3");
-        RRear    = hardwareMap.get(DcMotor.class, "wheel_2");
+        LFront   = hardwareMap.get(DcMotorEx.class, "wheel_0");
+        LRear    = hardwareMap.get(DcMotorEx.class, "wheel_1");
+        RFront   = hardwareMap.get(DcMotorEx.class, "wheel_3");
+        RRear    = hardwareMap.get(DcMotorEx.class, "wheel_2");
         //set direction
         LFront.setTargetPosition(0);
         LFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -187,7 +187,7 @@ public class AcellDecell extends OpMode
         RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //reset the IMU
         imu.resetYaw();
-        //reset runtime(for future needs, if using time controls)
+        //reset runtime
         runtime.reset();
         //reset arm encoder
         armMotor.setTargetPosition(0);
@@ -202,7 +202,7 @@ public class AcellDecell extends OpMode
         
         //ADD MAIN CODE HERE
         //be sure to use telemetry and log all variables for debugging!
-        drivegyro(0,1000,1000,0.1,0.01,500);
+        drivegyro(0,10,10,-1,0.01,10,1);
         //forward 17.26 in.
         //right 13.75 in.
         //diag right 13.75 in.
@@ -303,7 +303,7 @@ public class AcellDecell extends OpMode
             if (speeds[i]>max) max=speeds[i];
         }
         //normalize speeds if it is higher than max
-        if (max>maxspeed){
+        if (max>maxspeed && maxspeed!=-1){
             for (int i=0;i<speeds.length;i++) speeds[i]=speeds[i]/max*maxspeed;
         }
         //Calculate target wheel encoder position
@@ -312,17 +312,39 @@ public class AcellDecell extends OpMode
         distances[2]=LRear.getCurrentPosition()+distances[2];
         distances[3]=RRear.getCurrentPosition()+distances[3];
         //list of accel/decel distances
-        double[] accel_distances={};
+        double[] accel_distances={0,0,0,0,0,0,0,0};
         //list of time
-        double[] times={};
+        double[] times={0,0,0,0,0,0,0,0};
         for (int i=0;i<4;i++){
             //calculate acceleration and/or deceleration distance
             double acel_distance=Math.pow(maxspeed,2)/(2*acceleration);
+            double hold_distance=0;
             //hold speed distance
             if (i==0){
                 //Left Front wheel
-                double hold_distance=(Math.abs(distances[0]-LFront.getCurrentPosition()))-2*acel_distance;
+                hold_distance=(Math.abs(distances[0]-LFront.getCurrentPosition()))-2*acel_distance;
             }
+            else if (i==1){
+                //Right Front wheel
+                hold_distance=(Math.abs(distances[1]-RFront.getCurrentPosition()))-2*acel_distance;
+            }
+            else if (i==2){
+                //Left Rear wheel
+                hold_distance=(Math.abs(distances[2]-LRear.getCurrentPosition()))-2*acel_distance;
+            }
+            else{
+                //Right Rear wheel
+                hold_distance=(Math.abs(distances[3]-RRear.getCurrentPosition()))-2*acel_distance;
+            }
+            //accel time
+            double acel_real_time=maxspeed/acceleration;
+            //hold time
+            double hold_real_time=hold_distance/maxspeed;
+            //add to list
+            accel_distances[i]=acel_distance;
+            accel_distances[i+4]=hold_distance;
+            times[i]=acel_real_time;
+            times[i+4]=hold_real_time;
         }
         //wheel one
         LFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -346,11 +368,41 @@ public class AcellDecell extends OpMode
         boolean LR=(LRear.getCurrentPosition()>distances[2]);
         boolean RF=(RFront.getCurrentPosition()>distances[1]);
         boolean RR=(RRear.getCurrentPosition()>distances[3]);
+        //run stage(0=accel,1=hold,2=decel)
+        int[] stage={0,0,0,0};
+        //reset runtime
+        runtime.reset();
         while (true){
             //call armToPosition to move arm motor+servos
             armToPosition(armPosition, wristPosition, intakeSpeed,linearPos);
             //get steering correction
             double steeringCorrection=getSteeringCorrection(targetdirection, rotationspeed);
+            for (int i=0;i<4;i++){
+                //change stage
+                if (runtime.seconds()>=times[i]){
+                    stage[i]=1;
+                }
+                else if (runtime.seconds()>=times[i]+times[i+4]){
+                    stage[i]=2;
+                }
+                //change speeds list based on stage
+                if (stage[i]==0){
+                    //x=the current speed(based on time)
+                    //x=runtime*final speed/total time
+                    //acceleration
+                    speeds[i]=(runtime.seconds()*(accel_distances[i]/times[i]))/times[i];
+                }
+                else if (stage[i]==1){
+                    //hold
+                    speeds[i]=accel_distances[i+4]/times[i+4];
+                }
+                else{
+                    //x=the current speed(based on time)
+                    //x=time remaining*intial speed/total time
+                    //deceleration
+                    speeds[i]=((times[i]-runtime.seconds())*(accel_distances[i+4]/times[i+4]))/times[i];
+                }
+            }
             //set motor power(setting it to negative if the wheel is going backwards, and 0 if it isn't moving)
             if (distances[1] < RFront.getCurrentPosition() ) { 
                 RFront.setVelocity((speeds[1] * -1) +steeringCorrection);
@@ -394,12 +446,16 @@ public class AcellDecell extends OpMode
             //telemetry
             telemetry.addData("Left Front Motor (0):",Double.toString(LFront.getCurrentPosition()));
             telemetry.addData("Left Front Motor Target:",Double.toString(distances[0]));
-            telemetry.addData("Right Front Motor (3):",Double.toString(RFront.getCurrentPosition()));
+            telemetry.addData("Left Front Motor Speed:",Double.toString(speeds[0]));
+            telemetry.addData("Right Front Motor (1):",Double.toString(RFront.getCurrentPosition()));
             telemetry.addData("Right Front Motor Target:",Double.toString(distances[1]));
+            telemetry.addData("Right Front Motor Speed:",Double.toString(distances[1]));
             telemetry.addData("Left Rear Motor (2):",Double.toString(LRear.getCurrentPosition()));
             telemetry.addData("Left Rear Motor Target:",Double.toString(distances[2]));
-            telemetry.addData("Right Rear Motor (1):",Double.toString(RRear.getCurrentPosition()));
+            telemetry.addData("Left Rear Motor Speed:",Double.toString(distances[2]));
+            telemetry.addData("Right Rear Motor (3):",Double.toString(RRear.getCurrentPosition()));
             telemetry.addData("Right Rear Motor Target:",Double.toString(distances[3]));
+            telemetry.addData("Right Rear Motor Speed:",Double.toString(distances[3]));
             telemetry.update();
             //check for exit
             if (!((LFront.getCurrentPosition()>distances[0])==LF) && !((LRear.getCurrentPosition()>distances[2])==LR) && !((RFront.getCurrentPosition()>distances[1])==RF) && !((RRear.getCurrentPosition()>distances[3])==RR)){
