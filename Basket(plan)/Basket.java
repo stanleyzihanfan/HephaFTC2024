@@ -52,9 +52,10 @@ import java.lang.Thread;
 public class Basket extends OpMode
 {
     //arm servo+motor declaration
-    public DcMotor  armMotor    = null; //the arm motor
-    public Servo  intake      = null; //the active intake servo
-    public Servo    wrist       = null; //the wrist servo
+    public DcMotor  armMotor       = null; //the arm motor
+    public Servo    claw           = null; //the claw servo
+    public Servo    wrist_vertical = null; //the wrist_vertical servo
+    public Servo    wrist_horizontal = null; //the wrist_horizontal servo
     // drivetrain wheel motor declaration
     private DcMotor LFront=null;
     private DcMotor LRear=null;
@@ -81,16 +82,18 @@ public class Basket extends OpMode
     final double ARM_SCORE_SAMPLE_IN_LOW   = 160 * ARM_TICKS_PER_DEGREE;
     final double ARM_ATTACH_HANGING_HOOK   = 120 * ARM_TICKS_PER_DEGREE;
     final double ARM_WINCH_ROBOT           = 15  * ARM_TICKS_PER_DEGREE;
-    final double INTAKE_COLLECT    = 0.3;
-    final double INTAKE_DEPOSIT    =  0.55;
-    final double WRIST_FOLDED_IN   = 1;
-    final double WRIST_FOLDED_OUT  = 0.5;
+    final double claw_COLLECT    = 0.3;
+    final double claw_DEPOSIT    =  0.55;
+    final double wrist_vertical_FOLDED_IN   = 1;
+    final double wrist_vertical_FOLDED_OUT  = 0.8;
     //adjust this variable to change how much the arm adjudsts by for the left and right triggers.
     final double FUDGE_FACTOR = 15 * ARM_TICKS_PER_DEGREE;
     //variables used to set the arm to a specific position.
     double armPosition = (int)ARM_COLLAPSED_INTO_ROBOT;
-    double wristPosition = WRIST_FOLDED_IN;
-    double intakeSpeed = INTAKE_COLLECT;
+    double wrist_verticalPosition = wrist_vertical_FOLDED_IN;
+    //wrist horizontal at 0.2/0.85 parralel to ground, 0.5 vertical
+    double wrist_horizontalPosition = 0.2;
+    double clawSpeed = claw_COLLECT;
     double linearPos = 0;
 
     /**
@@ -155,8 +158,9 @@ public class Basket extends OpMode
         /*This sets the maximum current that the control hub will apply to the arm before throwing a flag */
         ((DcMotorEx) armMotor).setCurrentAlert(5,CurrentUnit.AMPS);
         //define servos
-        intake = hardwareMap.get(Servo.class, "servo_intake");
-        wrist  = hardwareMap.get(Servo.class, "servo_rotate");
+        claw = hardwareMap.get(Servo.class, "servo_claw");
+        wrist_vertical  = hardwareMap.get(Servo.class, "servo_vertical");
+        wrist_horizontal = hardwareMap.get(Servo.class, "servo_horizontal");
         //Log that initialization is complete.
         telemetry.addData("Status: ", "Initialized");
     }
@@ -193,8 +197,9 @@ public class Basket extends OpMode
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //initialize servos
-        intake.setPosition(INTAKE_DEPOSIT);
-        wrist.setPosition(WRIST_FOLDED_IN);
+        claw.setPosition(claw_COLLECT);
+        wrist_vertical.setPosition(wrist_vertical_FOLDED_IN);
+        wrist_horizontal.setPosition(0.2);
         //Log position intiation is complete
         telemetry.addData("Status: ","Robot Ready");
         telemetry.update();
@@ -203,17 +208,19 @@ public class Basket extends OpMode
         //be sure to use telemetry and log all variables for debugging!
         drivegyro(0,27,90,0.3,0.01,10);
         rotate(45,0.3);
-        linearPos=2200;
-        //wristpos
+        linearPos=2140;
         waitForTime(1.5);
-        armPosition=3000;
-        waitForTime(5);
-        intakeSpeed=INTAKE_DEPOSIT;
-        waitForTime(0.1);
+        wrist_verticalPosition=0.8;
+        wrist_horizontalPosition=0.2;
+        armPosition=2717;
+        waitForTime(2.5);
+        clawSpeed=claw_DEPOSIT;
+        waitForTime(2);
         armPosition=0;
         linearPos=100;
+        wrist_verticalPosition=1;
         waitForTime(0.1);
-        wristPosition=WRIST_FOLDED_IN;
+        wrist_verticalPosition=wrist_vertical_FOLDED_IN;
         rotate(-135, 0.3);
         // drivegyro(0,);
     }
@@ -224,7 +231,7 @@ public class Basket extends OpMode
     @Override
     public void loop() {
         //Constantly set the arm positions, as running motors with RUN_TO_POSITION requires this to operate properly.
-        armToPosition(armPosition, wristPosition, intakeSpeed,linearPos);
+        armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
         telemetry.addData("Left Front Motor (0):",Double.toString(LFront.getCurrentPosition()));
         telemetry.addData("Right Front Motor (3):",Double.toString(RFront.getCurrentPosition()));
         telemetry.addData("Left Rear Motor (2):",Double.toString(LRear.getCurrentPosition()));
@@ -348,7 +355,7 @@ public class Basket extends OpMode
         boolean RR=(RRear.getCurrentPosition()>distances[3]);
         while (true){
             //call armToPosition to move arm motor+servos
-            armToPosition(armPosition, wristPosition, intakeSpeed,linearPos);
+            armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
             //get steering correction
             double steeringCorrection=getSteeringCorrection(targetdirection, rotationspeed);
             //set motor power(setting it to negative if the wheel is going backwards, and 0 if it isn't moving)
@@ -491,17 +498,18 @@ public class Basket extends OpMode
         while(runtime.seconds()<=seconds){
             //update telemtry
             telemetry.addData("Time","%4.1f S Elapsed",runtime.seconds());
+            telemetry.update();
             //Constantly call the armToPosition function.
-            armToPosition(armPosition, wristPosition, intakeSpeed, linearPos);
+            armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
         }
     }
     
     /**
      * arm function
      */
-    public void armToPosition(double armPos, double wristPos, double intakeSpeed, double linearpos){
-        //set intake power/speed
-        intake.setPosition(intakeSpeed);
+    public void armToPosition(double armPos, double wrist_verticalPos, double clawSpeed, double linearpos, double wrist_horizontalPos){
+        //set claw power/speed
+        claw.setPosition(clawSpeed);
         //set arm motor target position
         armMotor.setTargetPosition((int)(armPos));
         telemetry.addLine("armMotor:"+armMotor.getTargetPosition());
@@ -513,22 +521,24 @@ public class Basket extends OpMode
         if (((DcMotorEx) armMotor).isOverCurrent()){
             telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
         }
-        //If the wrist pos passed in is greater than 8.333, then reset it to 8.333.
+        //If the wrist_vertical pos passed in is greater than 1, then reset it to 1.
         //This is to prevent the servo from jaming itself against the arm and burning
         //out due to a bad value being passed in.
-        if (wristPos<=8.333){
+        if (wrist_verticalPos>=0.07 && wrist_verticalPos<=1){
             //If value is within range
-            wrist.setPosition(wristPos);
+            wrist_vertical.setPosition(wrist_verticalPos);
         }
-        else if (wristPos<3.333){
+        else if (wrist_verticalPos>1){
             //If value is out of range in the negative direction
-            wrist.setPosition(0);
+            wrist_vertical.setPosition(1);
         }
         else{
             //If value is out of range in the positive direction
-            wrist.setPosition(8.333);
+            wrist_vertical.setPosition(0.07);
         }
-        telemetry.addData("Wrist position",wristPos);
+        telemetry.addData("wrist_vertical position",wrist_verticalPos);
+        //set wrist_horizontal position
+        wrist_horizontal.setPosition(wrist_horizontalPos);
         //set linear slide position
         if (linearpos<100){
             linearpos=100;
