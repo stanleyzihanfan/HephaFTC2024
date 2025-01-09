@@ -91,8 +91,8 @@ public class Basket extends OpMode
     //variables used to set the arm to a specific position.
     double armPosition = (int)ARM_COLLAPSED_INTO_ROBOT;
     double wrist_verticalPosition = wrist_vertical_FOLDED_IN;
-    //wrist horizontal at 0.2/0.85 parralel to ground, 0.5 vertical
-    double wrist_horizontalPosition = 0.2;
+    //wrist horizontal at 0.35/1 parralel to ground, 0/0.7 vertical
+    double wrist_horizontalPosition = 0.35;
     double clawSpeed = claw_COLLECT;
     double linearPos = 0;
 
@@ -199,19 +199,19 @@ public class Basket extends OpMode
         //initialize servos
         claw.setPosition(claw_COLLECT);
         wrist_vertical.setPosition(wrist_vertical_FOLDED_IN);
-        wrist_horizontal.setPosition(0.2);
+        wrist_horizontal.setPosition(0.35);
         //Log position intiation is complete
         telemetry.addData("Status: ","Robot Ready");
         telemetry.update();
         
         //ADD MAIN CODE HERE
         //be sure to use telemetry and log all variables for debugging!
-        drivegyro(0,27,90,0.3,0.01,10);
-        rotate(45,0.3);
+        drivegyro(0,27,90,0.5,0.01,7);
+        rotate(45,0.5);
         linearPos=2140;
         waitForTime(1.5);
         wrist_verticalPosition=0.8;
-        wrist_horizontalPosition=0.2;
+        wrist_horizontalPosition=0.35;
         armPosition=2717;
         waitForTime(2.5);
         clawSpeed=claw_DEPOSIT;
@@ -221,7 +221,21 @@ public class Basket extends OpMode
         wrist_verticalPosition=1;
         waitForTime(0.1);
         wrist_verticalPosition=wrist_vertical_FOLDED_IN;
-        rotate(-135, 0.3);
+        rotate(-135, 0.5);
+        drivegyro(0,8,24,0.4,0.01,3);
+        armPosition=4573;
+        wrist_verticalPosition=0.8;
+        wrist_horizontalPosition=0.35;
+        waitForTime(3.7);
+        clawSpeed=claw_COLLECT;
+        waitForTime(0.5);
+        armPosition=0;
+        wrist_verticalPosition=1;
+        drivegyro(0,-8,-24,0.4,0.01,3);
+        rotate(135,0.3);
+        //arm 4573
+        //wrist_vertical 0.8
+        //wrist_horizontal 0.35
         // drivegyro(0,);
     }
 

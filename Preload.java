@@ -91,8 +91,8 @@ public class Preload extends OpMode
     //variables used to set the arm to a specific position.
     double armPosition = (int)ARM_COLLAPSED_INTO_ROBOT;
     double wrist_verticalPosition = wrist_vertical_FOLDED_IN;
-    //wrist horizontal at 0.2/0.85 parralel to ground, 0.5 vertical
-    double wrist_horizontalPosition = 0.2;
+    //wrist horizontal at 0.35/0.85 parralel to ground, 0.5 vertical
+    double wrist_horizontalPosition = 0.35;
     double clawSpeed = claw_COLLECT;
     double linearPos = 0;
 
@@ -199,14 +199,14 @@ public class Preload extends OpMode
         //initialize servos
         claw.setPosition(claw_COLLECT);
         wrist_vertical.setPosition(wrist_vertical_FOLDED_IN);
-        wrist_horizontal.setPosition(0.2);
+        wrist_horizontal.setPosition(0.35);
         //Log position intiation is complete
         telemetry.addData("Status: ","Robot Ready");
         telemetry.update();
         
         //ADD MAIN CODE HERE
         //be sure to use telemetry and log all variables for debugging!
-        wrist_verticalPosition=0;
+        wrist_verticalPosition=1;
         clawSpeed=claw_DEPOSIT;
         waitForTime(3);
         clawSpeed=claw_COLLECT;

@@ -62,8 +62,8 @@ public class MecanumWheelArm extends LinearOpMode{
     double wrist_verticalmove=wrist_vertical_FOLDED_IN;
     //variables for wrist_horizontal
     final double wrist_horizontalShift = 0.05;
-    double wrist_horizontalPos=0;
-    double wrist_horizontalmove=0;
+    double wrist_horizontalPos=0.2;
+    double wrist_horizontalmove=0.2;
     //variable for where the linear slides are
     double linearpos=0;
     //how fast the linear slide moves
