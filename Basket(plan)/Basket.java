@@ -204,38 +204,66 @@ public class Basket extends OpMode
         telemetry.addData("Status: ","Robot Ready");
         telemetry.update();
         
-        //ADD MAIN CODE HERE
-        //be sure to use telemetry and log all variables for debugging!
-        drivegyro(0,27,90,0.5,0.01,7);
+        //drive to basket
+        drivegyro(0,27,90,0.5,0.01,7,false);
+        //rotate to face basket
         rotate(45,0.5);
+        waitForTime(2);
+        // //arm to position
+        // linearPos=2140;
+        // waitForTime(1.5);
+        // wrist_verticalPosition=0.8;
+        // wrist_horizontalPosition=0.35;
+        // armPosition=2650;
+        // waitForTime(2);
+        // //drop
+        // clawSpeed=claw_DEPOSIT;
+        // waitForTime(1.5);
+        // //reset arm
+        // armPosition=1000;
+        // linearPos=100;
+        // wrist_verticalPosition=1;
+        // waitForTime(0.1);
+        // wrist_verticalPosition=wrist_vertical_FOLDED_IN;
+        clawSpeed=claw_DEPOSIT;
+        //rotate + drive to collect
+        rotate(-135, 0.5);
+        drivegyro(0,9,22,0.3,0.01,3,true);
+        //collect
+        armPosition=4573;
+        wrist_verticalPosition=0.8;
+        wrist_horizontalPosition=0.35;
+        waitForTime(2.75);
+        clawSpeed=claw_COLLECT;
+        waitForTime(0.5);
+        //reset
+        armPosition=1000;
+        wrist_verticalPosition=1;
+        //back to basket
+        drivegyro(0,-9,-18,0.4,0.01,3,false);
+        rotate(135,0.5);
+        //drop
         linearPos=2140;
         waitForTime(1.5);
         wrist_verticalPosition=0.8;
         wrist_horizontalPosition=0.35;
-        armPosition=2717;
-        waitForTime(2.5);
-        clawSpeed=claw_DEPOSIT;
+        armPosition=2650;
         waitForTime(2);
-        armPosition=0;
+        clawSpeed=claw_DEPOSIT;
+        waitForTime(1.5);
+        //reset
+        armPosition=1180;
         linearPos=100;
-        wrist_verticalPosition=1;
-        waitForTime(0.1);
-        wrist_verticalPosition=wrist_vertical_FOLDED_IN;
-        rotate(-135, 0.5);
-        drivegyro(0,8,24,0.4,0.01,3);
-        armPosition=4573;
-        wrist_verticalPosition=0.8;
-        wrist_horizontalPosition=0.35;
-        waitForTime(3.7);
+        wrist_verticalPosition=0.6;
+        wrist_horizontalPosition=1;
         clawSpeed=claw_COLLECT;
-        waitForTime(0.5);
-        armPosition=0;
-        wrist_verticalPosition=1;
-        drivegyro(0,-8,-24,0.4,0.01,3);
-        rotate(135,0.3);
-        //arm 4573
-        //wrist_vertical 0.8
-        //wrist_horizontal 0.35
+        drivegyro(0,78,-108,0.75,0.01,5,false);
+        rotate(-35,0.7);
+        drivegyro(0,-10,-30,-1,0.01,3,false);
+        armPosition=1150;
+        //arm 1168
+        //wrist_vertical 0.6
+        //wrist_horizontal 1
         // drivegyro(0,);
     }
 
@@ -316,7 +344,7 @@ public class Basket extends OpMode
      * (this controls speed, but will get less effective the higher the distance)
      * @return none
      */
-    public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed, double time){
+    public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed, double time, boolean use_gyro){
         //get target heading
         double targetdirection=getHeading()+twist;
         //change distance to movement units
@@ -337,8 +365,10 @@ public class Basket extends OpMode
             if (speeds[i]>max) max=speeds[i];
         }
         //normalize speeds if it is higher than max
-        if (max>speed){
-            for (int i=0;i<speeds.length;i++) speeds[i]=speeds[i]/max*speed;
+        if (speed!=-1){
+            if (max>speed){
+                for (int i=0;i<speeds.length;i++) speeds[i]=speeds[i]/max*speed;
+            }
         }
         //Calculate target wheel encoder position
         distances[0]=LFront.getCurrentPosition()+distances[0];
@@ -367,45 +397,50 @@ public class Basket extends OpMode
         boolean LR=(LRear.getCurrentPosition()>distances[2]);
         boolean RF=(RFront.getCurrentPosition()>distances[1]);
         boolean RR=(RRear.getCurrentPosition()>distances[3]);
+        //the "wriggle room" variable(in encoder ticks)
+        double small_num=10;
         while (true){
             //call armToPosition to move arm motor+servos
             armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
             //get steering correction
             double steeringCorrection=getSteeringCorrection(targetdirection, rotationspeed);
-            //set motor power(setting it to negative if the wheel is going backwards, and 0 if it isn't moving)
-            if (distances[1] < RFront.getCurrentPosition() ) { 
+            if (use_gyro==false){
+                steeringCorrection=0;
+            }
+            //set motor power(setting it to negative if the wheel is going backwards, and 0 if it isn't moving)(Uses small_num to prevent motors from jiggling becuase it overshoots and then undershoots)
+            if (distances[1] < RFront.getCurrentPosition() - small_num) { 
                 RFront.setPower((speeds[1] * -1) +steeringCorrection);
             }
-            else if (distances[1] == RFront.getCurrentPosition()) {
+            else if (distances[1] <= RFront.getCurrentPosition()+small_num/2 && distances[1] >= RFront.getCurrentPosition()-small_num/2) {
                 RFront.setPower(0);
             }
             else {
                 RFront.setPower(speeds[1] + steeringCorrection);
             }
-            if (distances[3] < RRear.getCurrentPosition() ) { 
+            if (distances[3] < RRear.getCurrentPosition() - small_num) { 
                 RRear.setPower((speeds[3] * -1) +steeringCorrection);
             }
-            else if (distances[3] == RRear.getCurrentPosition()) {
+            else if (distances[3] <= RRear.getCurrentPosition()+small_num/2 && distances[3] >= RRear.getCurrentPosition()-small_num/2) {
                 RRear.setPower(0);
             }
             else {
                 RRear.setPower(speeds[3] + steeringCorrection);
             }
             
-            if (distances[0] < LFront.getCurrentPosition() ) { 
+            if (distances[0] < LFront.getCurrentPosition() - small_num) { 
                 LFront.setPower((speeds[0] * -1) - steeringCorrection);
             }
-            else if (distances[0] == LFront.getCurrentPosition()) {
+            else if (distances[0] <= LFront.getCurrentPosition()+small_num/2 && distances[0] >= LFront.getCurrentPosition()-small_num/2) {
                 LFront.setPower(0);
             }
             else {
                 LFront.setPower(speeds[0] - steeringCorrection);
             }
             
-            if (distances[2] < LRear.getCurrentPosition() ) { 
+            if (distances[2] < LRear.getCurrentPosition() - small_num) { 
                 LRear.setPower((speeds[2] * -1) - steeringCorrection);
             }
-            else if (distances[2] == LRear.getCurrentPosition()) {
+            else if (distances[2] <= LRear.getCurrentPosition()+small_num/2 && distances[2] >= LRear.getCurrentPosition()-small_num/2) {
                 LRear.setPower(0);
             }
             else {
@@ -528,7 +563,7 @@ public class Basket extends OpMode
         armMotor.setTargetPosition((int)(armPos));
         telemetry.addLine("armMotor:"+armMotor.getTargetPosition());
         //set motor velocity
-        ((DcMotorEx) armMotor).setVelocity(2750);
+        ((DcMotorEx) armMotor).setVelocity(2900);
         //run arm motor to position
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //telemetry if motor exceeded current limit
@@ -563,8 +598,8 @@ public class Basket extends OpMode
         telemetry.addData("linear Target:",linearpos);
         linearR.setTargetPosition((int) (linearpos));
         linearL.setTargetPosition((int) (linearpos));
-        ((DcMotorEx) linearR).setVelocity(1000);
-        ((DcMotorEx) linearL).setVelocity(1000);
+        ((DcMotorEx) linearR).setVelocity(1250);
+        ((DcMotorEx) linearL).setVelocity(1250);
         linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
