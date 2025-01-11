@@ -204,8 +204,9 @@ public class Basket extends OpMode
         telemetry.addData("Status: ","Robot Ready");
         telemetry.update();
         
+        double defalt_small_num=10;
         //drive to basket
-        drivegyro(0,27,90,0.5,0.01,7,false);
+        drivegyro(0,27,90,0.5,0.01,7,false,defalt_small_num);
         //rotate to face basket
         rotate(45,0.5);
         waitForTime(2);
@@ -225,10 +226,11 @@ public class Basket extends OpMode
         // wrist_verticalPosition=1;
         // waitForTime(0.1);
         // wrist_verticalPosition=wrist_vertical_FOLDED_IN;
+        //Test
         clawSpeed=claw_DEPOSIT;
         //rotate + drive to collect
         rotate(-135, 0.5);
-        drivegyro(0,9,22,0.3,0.01,3,true);
+        drivegyro(0,9,22,0.3,0.01,3,true,defalt_small_num);
         //collect
         armPosition=4573;
         wrist_verticalPosition=0.8;
@@ -240,7 +242,7 @@ public class Basket extends OpMode
         armPosition=1000;
         wrist_verticalPosition=1;
         //back to basket
-        drivegyro(0,-9,-18,0.4,0.01,3,false);
+        drivegyro(0,-9,-18,0.4,0.01,3,false,defalt_small_num);
         rotate(135,0.5);
         //drop
         linearPos=2140;
@@ -257,9 +259,9 @@ public class Basket extends OpMode
         wrist_verticalPosition=0.6;
         wrist_horizontalPosition=1;
         clawSpeed=claw_COLLECT;
-        drivegyro(0,78,-108,0.75,0.01,5,false);
+        drivegyro(0,78,-108,0.75,0.01,5,false,defalt_small_num);
         rotate(-35,0.7);
-        drivegyro(0,-10,-30,-1,0.01,3,false);
+        drivegyro(0,-10,-30,-1,0.01,3,false,defalt_small_num);
         armPosition=1150;
         //arm 1168
         //wrist_vertical 0.6
@@ -342,9 +344,11 @@ public class Basket extends OpMode
      * @param rotationspeed is rotation speed
      * @param time is the amount of parts it should divide the length into
      * (this controls speed, but will get less effective the higher the distance)
+     * @param use_gyro is whether or not to use gyro(true for yes)
+     * @param small_num the "wriggle room" variable(in encoder ticks)
      * @return none
      */
-    public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed, double time, boolean use_gyro){
+    public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed, double time, boolean use_gyro, double small_num){
         //get target heading
         double targetdirection=getHeading()+twist;
         //change distance to movement units
@@ -392,13 +396,6 @@ public class Basket extends OpMode
         LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //boolean values to show if the motor is ahead or behind the target position
-        boolean LF=(LFront.getCurrentPosition()>distances[0]);
-        boolean LR=(LRear.getCurrentPosition()>distances[2]);
-        boolean RF=(RFront.getCurrentPosition()>distances[1]);
-        boolean RR=(RRear.getCurrentPosition()>distances[3]);
-        //the "wriggle room" variable(in encoder ticks)
-        double small_num=10;
         while (true){
             //call armToPosition to move arm motor+servos
             armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
@@ -458,7 +455,7 @@ public class Basket extends OpMode
             telemetry.addData("Right Rear Motor Target:",Double.toString(distances[3]));
             telemetry.update();
             //check for exit
-            if (!((LFront.getCurrentPosition()>distances[0])==LF) && !((LRear.getCurrentPosition()>distances[2])==LR) && !((RFront.getCurrentPosition()>distances[1])==RF) && !((RRear.getCurrentPosition()>distances[3])==RR)){
+            if ((distances[0] <= LFront.getCurrentPosition()+small_num/2 && distances[0] >= LFront.getCurrentPosition()-small_num/2) && (distances[2] <= LRear.getCurrentPosition()+small_num/2 && distances[2] >= LRear.getCurrentPosition()-small_num/2) && (distances[1] <= RFront.getCurrentPosition()+small_num/2 && distances[1] >= RFront.getCurrentPosition()-small_num/2) && (distances[3] <= RRear.getCurrentPosition()+small_num/2 && distances[3] >= RRear.getCurrentPosition()-small_num/2)){
                 LFront.setPower(0);
                 LRear.setPower(0);
                 RFront.setPower(0);
@@ -523,7 +520,7 @@ public class Basket extends OpMode
      * Function to calculate distance units from rotation distance.
      * @param xdistance Distance moved forwards in cm.
      * @param ydistance Distance moved right in cm.
-     * @return Double list of movement units traveled.
+     * @return Double list of movement units/encoder ticks traveled.
      */
     public static double[] movementToDistanceUnits(double xdistance, double ydistance){
         //forward 17.26 in., 43.8404 cm. --> 0.0438404cm/MU

@@ -52,9 +52,10 @@ import java.lang.Thread;
 public class SpecimenRight extends OpMode
 {
     //arm servo+motor declaration
-    public DcMotor  armMotor    = null; //the arm motor
-    public Servo  intake      = null; //the active intake servo
-    public Servo    wrist       = null; //the wrist servo
+    public DcMotor  armMotor       = null; //the arm motor
+    public Servo    claw           = null; //the claw servo
+    public Servo    wrist_vertical = null; //the wrist_vertical servo
+    public Servo    wrist_horizontal = null; //the wrist_horizontal servo
     // drivetrain wheel motor declaration
     private DcMotor LFront=null;
     private DcMotor LRear=null;
@@ -81,16 +82,18 @@ public class SpecimenRight extends OpMode
     final double ARM_SCORE_SAMPLE_IN_LOW   = 160 * ARM_TICKS_PER_DEGREE;
     final double ARM_ATTACH_HANGING_HOOK   = 120 * ARM_TICKS_PER_DEGREE;
     final double ARM_WINCH_ROBOT           = 15  * ARM_TICKS_PER_DEGREE;
-    final double INTAKE_COLLECT    = 0.3;
-    final double INTAKE_DEPOSIT    =  0.55;
-    final double WRIST_FOLDED_IN   = 0.8333;
-    final double WRIST_FOLDED_OUT  = 0.5;
+    final double claw_COLLECT    = 0.3;
+    final double claw_DEPOSIT    =  0.55;
+    final double wrist_vertical_FOLDED_IN   = 1;
+    final double wrist_vertical_FOLDED_OUT  = 0.8;
     //adjust this variable to change how much the arm adjudsts by for the left and right triggers.
     final double FUDGE_FACTOR = 15 * ARM_TICKS_PER_DEGREE;
     //variables used to set the arm to a specific position.
     double armPosition = (int)ARM_COLLAPSED_INTO_ROBOT;
-    double wristPosition = WRIST_FOLDED_IN;
-    double intakeSpeed = INTAKE_COLLECT;
+    double wrist_verticalPosition = wrist_vertical_FOLDED_IN;
+    //wrist horizontal at 0.35/1 parralel to ground, 0/0.7 vertical
+    double wrist_horizontalPosition = 0.35;
+    double clawSpeed = claw_COLLECT;
     double linearPos = 0;
 
     /**
@@ -155,8 +158,9 @@ public class SpecimenRight extends OpMode
         /*This sets the maximum current that the control hub will apply to the arm before throwing a flag */
         ((DcMotorEx) armMotor).setCurrentAlert(5,CurrentUnit.AMPS);
         //define servos
-        intake = hardwareMap.get(Servo.class, "servo_intake");
-        wrist  = hardwareMap.get(Servo.class, "servo_rotate");
+        claw = hardwareMap.get(Servo.class, "servo_claw");
+        wrist_vertical  = hardwareMap.get(Servo.class, "servo_vertical");
+        wrist_horizontal = hardwareMap.get(Servo.class, "servo_horizontal");
         //Log that initialization is complete.
         telemetry.addData("Status: ", "Initialized");
     }
@@ -193,23 +197,23 @@ public class SpecimenRight extends OpMode
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //initialize servos
-        intake.setPosition(INTAKE_DEPOSIT);
-        wrist.setPosition(WRIST_FOLDED_IN);
+        claw.setPosition(claw_COLLECT);
+        wrist_vertical.setPosition(wrist_vertical_FOLDED_IN);
+        wrist_horizontal.setPosition(0.35);
         //Log position intiation is complete
         telemetry.addData("Status: ","Robot Ready");
         telemetry.update();
         
-        //ADD MAIN CODE HERE
-        //be sure to use telemetry and log all variables for debugging!
-        drivegyro(0,-20,33,0.3,0.01,10);
+        double defalt_small_num=10;
+        drivegyro(0,-20,33,0.3,0.01,10,true,defalt_small_num);
         armPosition=3700;
         waitForTime(3);
-        wristPosition=0.65;
-        drivegyro(0,0,5,0.3,0.01,1);
+        
+        drivegyro(0,0,5,0.3,0.01,1,true,defalt_small_num);
         waitForTime(0.5);
         armPosition=3900;
-        waitForTime(0.3);
-        intakeSpeed=INTAKE_DEPOSIT;
+        waitForTime(0.2);
+        clawSpeed=claw_DEPOSIT;
         waitForTime(1);
         // drivegyro(0,10,-10,0.3,0.01,2);
     }
@@ -220,7 +224,7 @@ public class SpecimenRight extends OpMode
     @Override
     public void loop() {
         //Constantly set the arm positions, as running motors with RUN_TO_POSITION requires this to operate properly.
-        armToPosition(armPosition, wristPosition, intakeSpeed,linearPos);
+        armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
         telemetry.addData("Left Front Motor (0):",Double.toString(LFront.getCurrentPosition()));
         telemetry.addData("Right Front Motor (3):",Double.toString(RFront.getCurrentPosition()));
         telemetry.addData("Left Rear Motor (2):",Double.toString(LRear.getCurrentPosition()));
@@ -289,9 +293,11 @@ public class SpecimenRight extends OpMode
      * @param rotationspeed is rotation speed
      * @param time is the amount of parts it should divide the length into
      * (this controls speed, but will get less effective the higher the distance)
+     * @param use_gyro is whether or not to use gyro(true for yes)
+     * @param small_num the "wriggle room" variable(in encoder ticks)
      * @return none
      */
-    public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed, double time){
+    public void drivegyro(double twist, double strafe, double drive, double speed, double rotationspeed, double time, boolean use_gyro, double small_num){
         //get target heading
         double targetdirection=getHeading()+twist;
         //change distance to movement units
@@ -312,8 +318,10 @@ public class SpecimenRight extends OpMode
             if (speeds[i]>max) max=speeds[i];
         }
         //normalize speeds if it is higher than max
-        if (max>speed){
-            for (int i=0;i<speeds.length;i++) speeds[i]=speeds[i]/max*speed;
+        if (speed!=-1){
+            if (max>speed){
+                for (int i=0;i<speeds.length;i++) speeds[i]=speeds[i]/max*speed;
+            }
         }
         //Calculate target wheel encoder position
         distances[0]=LFront.getCurrentPosition()+distances[0];
@@ -337,50 +345,48 @@ public class SpecimenRight extends OpMode
         LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //boolean values to show if the motor is ahead or behind the target position
-        boolean LF=(LFront.getCurrentPosition()>distances[0]);
-        boolean LR=(LRear.getCurrentPosition()>distances[2]);
-        boolean RF=(RFront.getCurrentPosition()>distances[1]);
-        boolean RR=(RRear.getCurrentPosition()>distances[3]);
         while (true){
             //call armToPosition to move arm motor+servos
-            armToPosition(armPosition, wristPosition, intakeSpeed,linearPos);
+            armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
             //get steering correction
             double steeringCorrection=getSteeringCorrection(targetdirection, rotationspeed);
-            //set motor power(setting it to negative if the wheel is going backwards, and 0 if it isn't moving)
-            if (distances[1] < RFront.getCurrentPosition() ) { 
+            if (use_gyro==false){
+                steeringCorrection=0;
+            }
+            //set motor power(setting it to negative if the wheel is going backwards, and 0 if it isn't moving)(Uses small_num to prevent motors from jiggling becuase it overshoots and then undershoots)
+            if (distances[1] < RFront.getCurrentPosition() - small_num) { 
                 RFront.setPower((speeds[1] * -1) +steeringCorrection);
             }
-            else if (distances[1] == RFront.getCurrentPosition()) {
+            else if (distances[1] <= RFront.getCurrentPosition()+small_num/2 && distances[1] >= RFront.getCurrentPosition()-small_num/2) {
                 RFront.setPower(0);
             }
             else {
                 RFront.setPower(speeds[1] + steeringCorrection);
             }
-            if (distances[3] < RRear.getCurrentPosition() ) { 
+            if (distances[3] < RRear.getCurrentPosition() - small_num) { 
                 RRear.setPower((speeds[3] * -1) +steeringCorrection);
             }
-            else if (distances[3] == RRear.getCurrentPosition()) {
+            else if (distances[3] <= RRear.getCurrentPosition()+small_num/2 && distances[3] >= RRear.getCurrentPosition()-small_num/2) {
                 RRear.setPower(0);
             }
             else {
                 RRear.setPower(speeds[3] + steeringCorrection);
             }
             
-            if (distances[0] < LFront.getCurrentPosition() ) { 
+            if (distances[0] < LFront.getCurrentPosition() - small_num) { 
                 LFront.setPower((speeds[0] * -1) - steeringCorrection);
             }
-            else if (distances[0] == LFront.getCurrentPosition()) {
+            else if (distances[0] <= LFront.getCurrentPosition()+small_num/2 && distances[0] >= LFront.getCurrentPosition()-small_num/2) {
                 LFront.setPower(0);
             }
             else {
                 LFront.setPower(speeds[0] - steeringCorrection);
             }
             
-            if (distances[2] < LRear.getCurrentPosition() ) { 
+            if (distances[2] < LRear.getCurrentPosition() - small_num) { 
                 LRear.setPower((speeds[2] * -1) - steeringCorrection);
             }
-            else if (distances[2] == LRear.getCurrentPosition()) {
+            else if (distances[2] <= LRear.getCurrentPosition()+small_num/2 && distances[2] >= LRear.getCurrentPosition()-small_num/2) {
                 LRear.setPower(0);
             }
             else {
@@ -398,7 +404,7 @@ public class SpecimenRight extends OpMode
             telemetry.addData("Right Rear Motor Target:",Double.toString(distances[3]));
             telemetry.update();
             //check for exit
-            if (!((LFront.getCurrentPosition()>distances[0])==LF) && !((LRear.getCurrentPosition()>distances[2])==LR) && !((RFront.getCurrentPosition()>distances[1])==RF) && !((RRear.getCurrentPosition()>distances[3])==RR)){
+            if ((distances[0] <= LFront.getCurrentPosition()+small_num/2 && distances[0] >= LFront.getCurrentPosition()-small_num/2) && (distances[2] <= LRear.getCurrentPosition()+small_num/2 && distances[2] >= LRear.getCurrentPosition()-small_num/2) && (distances[1] <= RFront.getCurrentPosition()+small_num/2 && distances[1] >= RFront.getCurrentPosition()-small_num/2) && (distances[3] <= RRear.getCurrentPosition()+small_num/2 && distances[3] >= RRear.getCurrentPosition()-small_num/2)){
                 LFront.setPower(0);
                 LRear.setPower(0);
                 RFront.setPower(0);
@@ -463,7 +469,7 @@ public class SpecimenRight extends OpMode
      * Function to calculate distance units from rotation distance.
      * @param xdistance Distance moved forwards in cm.
      * @param ydistance Distance moved right in cm.
-     * @return Double list of movement units traveled.
+     * @return Double list of movement units/encoder ticks traveled.
      */
     public static double[] movementToDistanceUnits(double xdistance, double ydistance){
         //forward 17.26 in., 43.8404 cm. --> 0.0438404cm/MU
@@ -487,44 +493,47 @@ public class SpecimenRight extends OpMode
         while(runtime.seconds()<=seconds){
             //update telemtry
             telemetry.addData("Time","%4.1f S Elapsed",runtime.seconds());
+            telemetry.update();
             //Constantly call the armToPosition function.
-            armToPosition(armPosition, wristPosition, intakeSpeed, linearPos);
+            armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
         }
     }
     
     /**
      * arm function
      */
-    public void armToPosition(double armPos, double wristPos, double intakeSpeed, double linearpos){
-        //set intake power/speed
-        intake.setPosition(intakeSpeed);
+    public void armToPosition(double armPos, double wrist_verticalPos, double clawSpeed, double linearpos, double wrist_horizontalPos){
+        //set claw power/speed
+        claw.setPosition(clawSpeed);
         //set arm motor target position
         armMotor.setTargetPosition((int)(armPos));
         telemetry.addLine("armMotor:"+armMotor.getTargetPosition());
         //set motor velocity
-        ((DcMotorEx) armMotor).setVelocity(2750);
+        ((DcMotorEx) armMotor).setVelocity(2900);
         //run arm motor to position
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //telemetry if motor exceeded current limit
         if (((DcMotorEx) armMotor).isOverCurrent()){
             telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
         }
-        //If the wrist pos passed in is greater than 8.333, then reset it to 8.333.
+        //If the wrist_vertical pos passed in is greater than 1, then reset it to 1.
         //This is to prevent the servo from jaming itself against the arm and burning
         //out due to a bad value being passed in.
-        if (wristPos<=8.333){
+        if (wrist_verticalPos>=0.07 && wrist_verticalPos<=1){
             //If value is within range
-            wrist.setPosition(wristPos);
+            wrist_vertical.setPosition(wrist_verticalPos);
         }
-        else if (wristPos<3.333){
+        else if (wrist_verticalPos>1){
             //If value is out of range in the negative direction
-            wrist.setPosition(0);
+            wrist_vertical.setPosition(1);
         }
         else{
             //If value is out of range in the positive direction
-            wrist.setPosition(8.333);
+            wrist_vertical.setPosition(0.07);
         }
-        telemetry.addData("Wrist position",wristPos);
+        telemetry.addData("wrist_vertical position",wrist_verticalPos);
+        //set wrist_horizontal position
+        wrist_horizontal.setPosition(wrist_horizontalPos);
         //set linear slide position
         if (linearpos<100){
             linearpos=100;
@@ -535,8 +544,8 @@ public class SpecimenRight extends OpMode
         telemetry.addData("linear Target:",linearpos);
         linearR.setTargetPosition((int) (linearpos));
         linearL.setTargetPosition((int) (linearpos));
-        ((DcMotorEx) linearR).setVelocity(1000);
-        ((DcMotorEx) linearL).setVelocity(1000);
+        ((DcMotorEx) linearR).setVelocity(1250);
+        ((DcMotorEx) linearL).setVelocity(1250);
         linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
