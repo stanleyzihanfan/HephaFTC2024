@@ -67,7 +67,7 @@ public class MecanumWheelArm extends LinearOpMode{
     //variable for where the linear slides are
     double linearpos=0;
     //how fast the linear slide moves
-    final double LINEARSHIFT=14;
+    final double LINEARSHIFT=20;
     //Change the constant to change how fast the arms moves during manual
     final double armShift=3*ARM_TICKS_PER_DEGREE;
     //lowest arm motor speed
@@ -110,15 +110,15 @@ public class MecanumWheelArm extends LinearOpMode{
         ((DcMotorEx) linearR).setCurrentAlert(5,CurrentUnit.AMPS);
         ((DcMotorEx) linearL).setCurrentAlert(5,CurrentUnit.AMPS);
         //reset encoder
-        armMotor.setTargetPosition(0);
-        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        linearR.setTargetPosition(0);
-        linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        linearR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        linearL.setTargetPosition(0);
-        linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        linearL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        // armMotor.setTargetPosition(0);
+        // armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        // linearR.setTargetPosition(0);
+        // linearR.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // linearR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        // linearL.setTargetPosition(0);
+        // linearL.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // linearL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         /* Define and initialize servos.*/
         claw = hardwareMap.get(Servo.class, "servo_claw");
         wrist_horizontal  = hardwareMap.get(Servo.class, "servo_horizontal");
@@ -134,8 +134,6 @@ public class MecanumWheelArm extends LinearOpMode{
         //repeat untill opmode ends
         //claw position
         double clawpos=claw_DEPOSIT;
-        //testing
-        boolean test=false;
         while (opModeIsActive()){
             if (gamepad2.a) {
                 //close claw
@@ -150,11 +148,6 @@ public class MecanumWheelArm extends LinearOpMode{
             //telemetry if motor exceeded current limit
             if (((DcMotorEx) armMotor).isOverCurrent()){
                 telemetry.addLine("MOTOR EXCEEDED CURRENT LIMIT!");
-                clawpos=claw_DEPOSIT;
-                test=true;
-            }
-            if (test){
-                telemetry.addLine("TEST");
             }
             //apply claw position
             claw.setPosition(clawpos);
@@ -203,10 +196,15 @@ public class MecanumWheelArm extends LinearOpMode{
             }
             //arm positions
             if (gamepad2.right_bumper){
+                //arm 2240
+                //wristverti 0.85
+                //wristhoriz 0.35
+                //linear 2220
                 /* This is the correct height to score the sample in the HIGH BASKET */
-                armPosition = 3060;
-                linearpos=2300;
-                wrist_verticalPos=wrist_vertical_FOLDED_OUT;
+                armPosition = 2240;
+                linearpos=2220;
+                wrist_verticalPos=0.85;
+                wrist_horizontalPos=0.35;
             }
             else if (gamepad2.y){
                 //reset arm
@@ -216,9 +214,25 @@ public class MecanumWheelArm extends LinearOpMode{
                 }
             }
             else if (gamepad2.left_bumper){
-                //this is the hight for the lower basket
-                armPosition=2800;
-                wrist_verticalPos=wrist_vertical_FOLDED_OUT;
+                //this is the hight for the specimen
+                //arm 4467
+                //wriat ver 0.5
+                //wrist hor 0.35
+                //linear 100
+                armPosition=3950;
+                wrist_verticalPos=0.5;
+                wrist_horizontalPos=1;
+                linearpos=75;
+            }
+            else if (gamepad1.right_bumper){
+            //arm 4090
+            //wrist ver=0.85
+            //wrist hor=0.4;
+            //linear=100;
+                armPosition=4090;
+                wrist_horizontalPos=0.4;
+                wrist_verticalPos=0.85;
+                linearpos=100;
             }
             //set wrist_vertical to opposite position
             else if (gamepad2.right_stick_button && !rightStickPressed){
@@ -256,8 +270,8 @@ public class MecanumWheelArm extends LinearOpMode{
                 armPosition=0;
             }
             //set linear slide position
-            if (linearpos+linearMove*LINEARSHIFT*-1<100){
-                linearpos=100;
+            if (linearpos+linearMove*LINEARSHIFT*-1<75){
+                linearpos=75;
             }
             else{
             linearpos=linearpos+linearMove*LINEARSHIFT*-1;

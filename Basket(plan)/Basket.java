@@ -204,33 +204,31 @@ public class Basket extends OpMode
         telemetry.addData("Status: ","Robot Ready");
         telemetry.update();
         
-        double defalt_small_num=10;
+        double defalt_small_num=15;
         //drive to basket
         drivegyro(0,27,90,0.5,0.01,7,false,defalt_small_num);
         //rotate to face basket
         rotate(45,0.5);
+        waitForTime(1);
+        //arm to position
+        linearPos=2140;
+        waitForTime(1.5);
+        wrist_verticalPosition=0.8;
+        wrist_horizontalPosition=0.35;
+        armPosition=2550;
         waitForTime(2);
-        // //arm to position
-        // linearPos=2140;
-        // waitForTime(1.5);
-        // wrist_verticalPosition=0.8;
-        // wrist_horizontalPosition=0.35;
-        // armPosition=2650;
-        // waitForTime(2);
-        // //drop
-        // clawSpeed=claw_DEPOSIT;
-        // waitForTime(1.5);
-        // //reset arm
-        // armPosition=1000;
-        // linearPos=100;
-        // wrist_verticalPosition=1;
-        // waitForTime(0.1);
-        // wrist_verticalPosition=wrist_vertical_FOLDED_IN;
-        //Test
+        //drop
         clawSpeed=claw_DEPOSIT;
+        waitForTime(1.5);
+        //reset arm
+        armPosition=1000;
+        linearPos=100;
+        wrist_verticalPosition=1;
+        waitForTime(0.1);
+        wrist_verticalPosition=wrist_vertical_FOLDED_IN;
         //rotate + drive to collect
         rotate(-135, 0.5);
-        drivegyro(0,9,22,0.3,0.01,3,true,defalt_small_num);
+        drivegyro(0,9,24.5,0.3,0.01,3,true,defalt_small_num);
         //collect
         armPosition=4573;
         wrist_verticalPosition=0.8;
@@ -242,7 +240,7 @@ public class Basket extends OpMode
         armPosition=1000;
         wrist_verticalPosition=1;
         //back to basket
-        drivegyro(0,-9,-18,0.4,0.01,3,false,defalt_small_num);
+        drivegyro(0,-8,-16,0.4,0.01,3,false,defalt_small_num);
         rotate(135,0.5);
         //drop
         linearPos=2140;
@@ -259,10 +257,11 @@ public class Basket extends OpMode
         wrist_verticalPosition=0.6;
         wrist_horizontalPosition=1;
         clawSpeed=claw_COLLECT;
-        drivegyro(0,78,-108,0.75,0.01,5,false,defalt_small_num);
-        rotate(-35,0.7);
-        drivegyro(0,-10,-30,-1,0.01,3,false,defalt_small_num);
+        drivegyro(0,78,-108,0.75,0.01,5,false,25);
+        rotate(-30,0.7);
+        drivegyro(0,-10,-50,-1,0.01,3,false,25);
         armPosition=1150;
+        wrist_verticalPosition=0.4;
         //arm 1168
         //wrist_vertical 0.6
         //wrist_horizontal 1
@@ -396,6 +395,11 @@ public class Basket extends OpMode
         LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //boolean values to show if the wheel has reached taget position
+        boolean LF=false;
+        boolean LR=false;
+        boolean RR=false;
+        boolean RF=false;
         while (true){
             //call armToPosition to move arm motor+servos
             armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
@@ -410,6 +414,7 @@ public class Basket extends OpMode
             }
             else if (distances[1] <= RFront.getCurrentPosition()+small_num/2 && distances[1] >= RFront.getCurrentPosition()-small_num/2) {
                 RFront.setPower(0);
+                RF=true;
             }
             else {
                 RFront.setPower(speeds[1] + steeringCorrection);
@@ -419,6 +424,7 @@ public class Basket extends OpMode
             }
             else if (distances[3] <= RRear.getCurrentPosition()+small_num/2 && distances[3] >= RRear.getCurrentPosition()-small_num/2) {
                 RRear.setPower(0);
+                RR=true;
             }
             else {
                 RRear.setPower(speeds[3] + steeringCorrection);
@@ -429,6 +435,7 @@ public class Basket extends OpMode
             }
             else if (distances[0] <= LFront.getCurrentPosition()+small_num/2 && distances[0] >= LFront.getCurrentPosition()-small_num/2) {
                 LFront.setPower(0);
+                LF=true;
             }
             else {
                 LFront.setPower(speeds[0] - steeringCorrection);
@@ -439,6 +446,7 @@ public class Basket extends OpMode
             }
             else if (distances[2] <= LRear.getCurrentPosition()+small_num/2 && distances[2] >= LRear.getCurrentPosition()-small_num/2) {
                 LRear.setPower(0);
+                LR=true;
             }
             else {
                 LRear.setPower(speeds[2] - steeringCorrection);
@@ -455,7 +463,7 @@ public class Basket extends OpMode
             telemetry.addData("Right Rear Motor Target:",Double.toString(distances[3]));
             telemetry.update();
             //check for exit
-            if ((distances[0] <= LFront.getCurrentPosition()+small_num/2 && distances[0] >= LFront.getCurrentPosition()-small_num/2) && (distances[2] <= LRear.getCurrentPosition()+small_num/2 && distances[2] >= LRear.getCurrentPosition()-small_num/2) && (distances[1] <= RFront.getCurrentPosition()+small_num/2 && distances[1] >= RFront.getCurrentPosition()-small_num/2) && (distances[3] <= RRear.getCurrentPosition()+small_num/2 && distances[3] >= RRear.getCurrentPosition()-small_num/2)){
+            if ((LF) && (LR) && (RR) && (RF)){
                 LFront.setPower(0);
                 LRear.setPower(0);
                 RFront.setPower(0);

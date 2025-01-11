@@ -204,7 +204,7 @@ public class SpecimenRight extends OpMode
         telemetry.addData("Status: ","Robot Ready");
         telemetry.update();
         
-        double defalt_small_num=10;
+        double defalt_small_num=15;
         drivegyro(0,-20,33,0.3,0.01,10,true,defalt_small_num);
         armPosition=3700;
         waitForTime(3);
@@ -345,6 +345,11 @@ public class SpecimenRight extends OpMode
         LRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //boolean values to show if the wheel has reached taget position
+        boolean LF=false;
+        boolean LR=false;
+        boolean RR=false;
+        boolean RF=false;
         while (true){
             //call armToPosition to move arm motor+servos
             armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
@@ -359,6 +364,7 @@ public class SpecimenRight extends OpMode
             }
             else if (distances[1] <= RFront.getCurrentPosition()+small_num/2 && distances[1] >= RFront.getCurrentPosition()-small_num/2) {
                 RFront.setPower(0);
+                RF=true;
             }
             else {
                 RFront.setPower(speeds[1] + steeringCorrection);
@@ -368,6 +374,7 @@ public class SpecimenRight extends OpMode
             }
             else if (distances[3] <= RRear.getCurrentPosition()+small_num/2 && distances[3] >= RRear.getCurrentPosition()-small_num/2) {
                 RRear.setPower(0);
+                RR=true;
             }
             else {
                 RRear.setPower(speeds[3] + steeringCorrection);
@@ -378,6 +385,7 @@ public class SpecimenRight extends OpMode
             }
             else if (distances[0] <= LFront.getCurrentPosition()+small_num/2 && distances[0] >= LFront.getCurrentPosition()-small_num/2) {
                 LFront.setPower(0);
+                LF=true;
             }
             else {
                 LFront.setPower(speeds[0] - steeringCorrection);
@@ -388,6 +396,7 @@ public class SpecimenRight extends OpMode
             }
             else if (distances[2] <= LRear.getCurrentPosition()+small_num/2 && distances[2] >= LRear.getCurrentPosition()-small_num/2) {
                 LRear.setPower(0);
+                LR=true;
             }
             else {
                 LRear.setPower(speeds[2] - steeringCorrection);
@@ -404,7 +413,7 @@ public class SpecimenRight extends OpMode
             telemetry.addData("Right Rear Motor Target:",Double.toString(distances[3]));
             telemetry.update();
             //check for exit
-            if ((distances[0] <= LFront.getCurrentPosition()+small_num/2 && distances[0] >= LFront.getCurrentPosition()-small_num/2) && (distances[2] <= LRear.getCurrentPosition()+small_num/2 && distances[2] >= LRear.getCurrentPosition()-small_num/2) && (distances[1] <= RFront.getCurrentPosition()+small_num/2 && distances[1] >= RFront.getCurrentPosition()-small_num/2) && (distances[3] <= RRear.getCurrentPosition()+small_num/2 && distances[3] >= RRear.getCurrentPosition()-small_num/2)){
+            if ((LF) && (LR) && (RR) && (RF)){
                 LFront.setPower(0);
                 LRear.setPower(0);
                 RFront.setPower(0);
