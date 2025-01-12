@@ -205,17 +205,31 @@ public class SpecimenRight extends OpMode
         telemetry.update();
         
         double defalt_small_num=15;
-        drivegyro(0,-20,33,0.3,0.01,10,true,defalt_small_num);
-        armPosition=3700;
-        waitForTime(3);
-        
-        drivegyro(0,0,5,0.3,0.01,1,true,defalt_small_num);
-        waitForTime(0.5);
-        armPosition=3900;
-        waitForTime(0.2);
+        //arm 3425
+        //ver.67
+        //hor 0.35
+        drivegyro(0,-20,30,0.3,0.01,10,true,defalt_small_num);
+        armPosition=3000;
+        wrist_verticalPosition=0.67;
+        wrist_horizontalPosition=0.35;
+        waitForTime(1.75);
+        armPosition=4000;
+        waitForTime(0);
+        wrist_verticalPosition=0.4;
+        drivegyro(0,0,16,-1,0.01,1,true,30);
+        waitForTime(0.7);
         clawSpeed=claw_DEPOSIT;
-        waitForTime(1);
-        // drivegyro(0,10,-10,0.3,0.01,2);
+        waitForTime(0.2);
+        armPosition=1000;
+        drivegyro(0,25.4,-17.78,0.4,0.01,2,true,defalt_small_num);
+        drivegyro(0,47,33,0.4,0.01,3,true,defalt_small_num);
+        rotate(5,0.2);
+        drivegyro(0,0,100,0.4,0.01,4,true,defalt_small_num);
+        drivegyro(0,26,0,0.3,0.01,2,true,defalt_small_num);
+        drivegyro(0,0,-140,0.4,0.01,5,true,defalt_small_num);
+        drivegyro(0,0,140,0.4,0.01,5,true,defalt_small_num);
+        drivegyro(0,26,0,0.3,0.01,2,true,defalt_small_num);
+        drivegyro(0,0,-150,0.4,0.01,8,true,defalt_small_num);
     }
 
     /**
@@ -499,6 +513,7 @@ public class SpecimenRight extends OpMode
         //reset runtime
         runtime.reset();
         //wait untill runtime exeeds time limit
+        armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
         while(runtime.seconds()<=seconds){
             //update telemtry
             telemetry.addData("Time","%4.1f S Elapsed",runtime.seconds());
@@ -518,7 +533,7 @@ public class SpecimenRight extends OpMode
         armMotor.setTargetPosition((int)(armPos));
         telemetry.addLine("armMotor:"+armMotor.getTargetPosition());
         //set motor velocity
-        ((DcMotorEx) armMotor).setVelocity(2900);
+        ((DcMotorEx) armMotor).setVelocity(3500);
         //run arm motor to position
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //telemetry if motor exceeded current limit
