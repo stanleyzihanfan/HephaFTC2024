@@ -215,8 +215,6 @@ public class SpecimenRight extends OpMode
         waitForTime(1.75);
         armPosition=4000;
         waitForTime(0);
-        // wrist_verticalPosition=0.4;
-        // drivegyro(0,0,16,-1,0.01,1,true,30);
         waitForTime(0.7);
         clawSpeed=claw_DEPOSIT;
         waitForTime(0.2);
