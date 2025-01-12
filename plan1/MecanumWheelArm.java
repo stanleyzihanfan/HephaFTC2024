@@ -69,7 +69,7 @@ public class MecanumWheelArm extends LinearOpMode{
     //how fast the linear slide moves
     final double LINEARSHIFT=20;
     //Change the constant to change how fast the arms moves during manual
-    final double armShift=1.5*ARM_TICKS_PER_DEGREE;
+    final double armShift=2*ARM_TICKS_PER_DEGREE;
     //lowest arm motor speed
     final int LOW_ARM_SPEED=2100;
     //highest arm motor speed
@@ -303,9 +303,9 @@ public class MecanumWheelArm extends LinearOpMode{
             //below is drivetrain
             // Mecanum drive is controlled with three axes: drive (front-and-back),
             // strafe (left-and-right), and twist (rotating the whole chassis).
-            double drive  = gamepad1.left_stick_y*0.75;
-            final double strafe_speed=0.75;
-            double strafe = -gamepad1.left_stick_x*0.75;
+            double drive  = gamepad1.left_stick_y*0.7;
+            final double strafe_speed=0.5;
+            double strafe = -gamepad1.left_stick_x*0.5;
             if (gamepad1.dpad_left){
                 strafe=strafe_speed;
             }
