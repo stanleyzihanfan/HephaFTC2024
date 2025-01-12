@@ -549,6 +549,7 @@ public class Basket extends OpMode
         //reset runtime
         runtime.reset();
         //wait untill runtime exeeds time limit
+        armToPosition(armPosition, wrist_verticalPosition, clawSpeed,linearPos,wrist_horizontalPosition);
         while(runtime.seconds()<=seconds){
             //update telemtry
             telemetry.addData("Time","%4.1f S Elapsed",runtime.seconds());

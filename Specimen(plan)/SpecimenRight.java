@@ -156,7 +156,7 @@ public class SpecimenRight extends OpMode
         stops much quicker. */
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         /*This sets the maximum current that the control hub will apply to the arm before throwing a flag */
-        ((DcMotorEx) armMotor).setCurrentAlert(5,CurrentUnit.AMPS);
+        ((DcMotorEx) armMotor).setCurrentAlert(10,CurrentUnit.AMPS);
         //define servos
         claw = hardwareMap.get(Servo.class, "servo_claw");
         wrist_vertical  = hardwareMap.get(Servo.class, "servo_vertical");
@@ -215,8 +215,8 @@ public class SpecimenRight extends OpMode
         waitForTime(1.75);
         armPosition=4000;
         waitForTime(0);
-        wrist_verticalPosition=0.4;
-        drivegyro(0,0,16,-1,0.01,1,true,30);
+        // wrist_verticalPosition=0.4;
+        // drivegyro(0,0,16,-1,0.01,1,true,30);
         waitForTime(0.7);
         clawSpeed=claw_DEPOSIT;
         waitForTime(0.2);
@@ -226,10 +226,10 @@ public class SpecimenRight extends OpMode
         rotate(5,0.2);
         drivegyro(0,0,100,0.4,0.01,4,true,defalt_small_num);
         drivegyro(0,26,0,0.3,0.01,2,true,defalt_small_num);
-        drivegyro(0,0,-140,0.4,0.01,5,true,defalt_small_num);
-        drivegyro(0,0,140,0.4,0.01,5,true,defalt_small_num);
+        drivegyro(0,0,-130,0.4,0.01,5,true,defalt_small_num);
+        drivegyro(0,0,130,0.4,0.01,5,true,defalt_small_num);
         drivegyro(0,26,0,0.3,0.01,2,true,defalt_small_num);
-        drivegyro(0,0,-150,0.4,0.01,8,true,defalt_small_num);
+        drivegyro(0,0,-140,0.4,0.01,8,true,defalt_small_num);
     }
 
     /**
@@ -533,7 +533,7 @@ public class SpecimenRight extends OpMode
         armMotor.setTargetPosition((int)(armPos));
         telemetry.addLine("armMotor:"+armMotor.getTargetPosition());
         //set motor velocity
-        ((DcMotorEx) armMotor).setVelocity(3500);
+        ((DcMotorEx) armMotor).setVelocity(4000);
         //run arm motor to position
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //telemetry if motor exceeded current limit
