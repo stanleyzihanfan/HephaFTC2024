@@ -69,7 +69,7 @@ public class MecanumWheelArm extends LinearOpMode{
     //how fast the linear slide moves
     final double LINEARSHIFT=20;
     //Change the constant to change how fast the arms moves during manual
-    final double armShift=3*ARM_TICKS_PER_DEGREE;
+    final double armShift=1.5*ARM_TICKS_PER_DEGREE;
     //lowest arm motor speed
     final int LOW_ARM_SPEED=2100;
     //highest arm motor speed
@@ -106,7 +106,7 @@ public class MecanumWheelArm extends LinearOpMode{
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         /*This sets the maximum current that the control hub will apply to the arm before throwing a flag */
         //tune arm motor current alert for auto claw realease(between 4-5)
-        ((DcMotorEx) armMotor).setCurrentAlert(5,CurrentUnit.AMPS);
+        ((DcMotorEx) armMotor).setCurrentAlert(10,CurrentUnit.AMPS);
         ((DcMotorEx) linearR).setCurrentAlert(5,CurrentUnit.AMPS);
         ((DcMotorEx) linearL).setCurrentAlert(5,CurrentUnit.AMPS);
         //reset encoder
