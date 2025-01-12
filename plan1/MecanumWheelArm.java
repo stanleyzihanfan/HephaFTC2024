@@ -57,7 +57,7 @@ public class MecanumWheelArm extends LinearOpMode{
     boolean wrist_verticalLocation=true;
     //varaibles for wrist_horizontal
     //change wrist_horizontalShift to change how fast the wrist_horizontal moves.
-    final double wrist_verticalShift = 0.05;
+    final double wrist_verticalShift = 0.02;
     double wrist_verticalPos=wrist_vertical_FOLDED_IN;
     double wrist_verticalmove=wrist_vertical_FOLDED_IN;
     //variables for wrist_horizontal
