@@ -208,7 +208,7 @@ public class SpecimenRight extends OpMode
         //arm 3425
         //ver.67
         //hor 0.35
-        drivegyro(0,-20,30,0.3,0.01,10,true,defalt_small_num);
+        drivegyro(0,-20,30.5,0.3,0.01,10,true,defalt_small_num);
         armPosition=3000;
         wrist_verticalPosition=0.67;
         wrist_horizontalPosition=0.35;

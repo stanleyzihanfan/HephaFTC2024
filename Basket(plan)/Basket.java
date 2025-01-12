@@ -228,7 +228,7 @@ public class Basket extends OpMode
         wrist_verticalPosition=wrist_vertical_FOLDED_IN;
         //rotate + drive to collect
         rotate(-135, 0.5);
-        drivegyro(0,9,24.5,0.3,0.01,3,true,defalt_small_num);
+        drivegyro(0,9.5,24.75,0.3,0.01,3,true,defalt_small_num);
         //collect
         armPosition=4573;
         wrist_verticalPosition=0.8;
