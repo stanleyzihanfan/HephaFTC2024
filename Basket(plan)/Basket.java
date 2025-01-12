@@ -206,7 +206,7 @@ public class Basket extends OpMode
         
         double defalt_small_num=15;
         //drive to basket
-        drivegyro(0,27,90,0.5,0.01,7,false,defalt_small_num);
+        drivegyro(0,26,93,0.5,0.01,7,false,defalt_small_num);
         //rotate to face basket
         rotate(45,0.5);
         waitForTime(1);
@@ -215,7 +215,7 @@ public class Basket extends OpMode
         waitForTime(1.5);
         wrist_verticalPosition=0.8;
         wrist_horizontalPosition=0.35;
-        armPosition=2550;
+        armPosition=2650;
         waitForTime(2);
         //drop
         clawSpeed=claw_DEPOSIT;
@@ -228,7 +228,7 @@ public class Basket extends OpMode
         wrist_verticalPosition=wrist_vertical_FOLDED_IN;
         //rotate + drive to collect
         rotate(-135, 0.5);
-        drivegyro(0,9.5,24.75,0.3,0.01,3,true,defalt_small_num);
+        drivegyro(0,8.5,12,0.3,0.01,3,true,defalt_small_num);
         //collect
         armPosition=4573;
         wrist_verticalPosition=0.8;
@@ -240,10 +240,10 @@ public class Basket extends OpMode
         armPosition=1000;
         wrist_verticalPosition=1;
         //back to basket
-        drivegyro(0,-8,-16,0.4,0.01,3,false,defalt_small_num);
+        drivegyro(0,-10,-5,0.4,0.01,3,false,defalt_small_num);
         rotate(135,0.5);
         //drop
-        linearPos=2140;
+        linearPos=2240;
         waitForTime(1.5);
         wrist_verticalPosition=0.8;
         wrist_horizontalPosition=0.35;
