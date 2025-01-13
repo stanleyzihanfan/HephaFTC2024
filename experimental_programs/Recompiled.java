@@ -1,3 +1,7 @@
+
+import java.awt.dnd.DragSourceMotionListener;
+import javax.swing.plaf.InputMapUIResource;
+
 public class Recompiled {
     
 }
@@ -23,6 +27,28 @@ class drive{
     //x and y position relative to field, in cm. (0,0) is bottum left.
     private double x_position_relativeField=0;
     private double y_position_relativeField=0;
+    //robot objects
+    //arm servo+motor declaration
+    public DcMotor  armMotor       = hardwareMap.get(DcMotor.class,"arm_lift"); //the arm motor
+    public Servo    claw           = hardwareMap.get(DcMotor.class,"servo_claw"); //the claw servo
+    public Servo    wrist_vertical = hardwareMap.get(DcMotor.class,"servo_vertical"); //the wrist_vertical servo
+    public Servo    wrist_horizontal = hardwareMap.get(DcMotor.class,"servo_horizontal"); //the wrist_horizontal servo
+    // drivetrain wheel motor declaration
+    private DcMotor LFront=hardwareMap.get(DcMotor.class,"wheel_0");
+    private DcMotor LRear=hardwareMap.get(DcMotor.class,"wheel_1");
+    private DcMotor RFront=hardwareMap.get(DcMotor.class,"wheel_3");
+    private DcMotor RRear=hardwareMap.get(DcMotor.class,"wheel_2");
+    //linear slide motors
+    private DcMotor linearL=hardwareMap.get(DcMotor.class,"linearL");
+    private DcMotor linearR=hardwareMap.get(DcMotor.class,"linearR");
+    //set the orientation of the REV hub on the robot(the IMU location is on one of the corners of the robot)
+    RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+    RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+    RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+    //IMU declatration
+    private IMU imu=hardwareMap.get(IMU.class,"imu");
+    //initiate runtime
+    private ElapsedTime runtime=new ElapsedTime();
 
     //Main getter function
     public double[] get_full(){

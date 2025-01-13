@@ -220,7 +220,8 @@ public class SpecimenRight extends OpMode
         waitForTime(0.2);
         armPosition=1000;
         wrist_verticalPosition=0.07;
-        drivegyro(0,25.4,-17.78,0.4,0.01,2,true,defalt_small_num);
+        drivegyro(0,25.4,-18.5,0.4,0.01,2,true,defalt_small_num);
+        wrist_verticalPosition=1;
         drivegyro(0,47,33,0.4,0.01,3,true,defalt_small_num);
         rotate(5,0.2);
         drivegyro(0,0,100,0.4,0.01,4,true,defalt_small_num);
