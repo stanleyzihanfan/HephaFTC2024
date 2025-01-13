@@ -106,7 +106,7 @@ public class MecanumWheelArm extends LinearOpMode{
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         /*This sets the maximum current that the control hub will apply to the arm before throwing a flag */
         //tune arm motor current alert for auto claw realease(between 4-5)
-        ((DcMotorEx) armMotor).setCurrentAlert(10,CurrentUnit.AMPS);
+        ((DcMotorEx) armMotor).setCurrentAlert(15,CurrentUnit.AMPS);
         ((DcMotorEx) linearR).setCurrentAlert(5,CurrentUnit.AMPS);
         ((DcMotorEx) linearL).setCurrentAlert(5,CurrentUnit.AMPS);
         //reset encoder

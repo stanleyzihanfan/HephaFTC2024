@@ -156,7 +156,7 @@ public class SpecimenRight extends OpMode
         stops much quicker. */
         armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         /*This sets the maximum current that the control hub will apply to the arm before throwing a flag */
-        ((DcMotorEx) armMotor).setCurrentAlert(10,CurrentUnit.AMPS);
+        ((DcMotorEx) armMotor).setCurrentAlert(15,CurrentUnit.AMPS);
         //define servos
         claw = hardwareMap.get(Servo.class, "servo_claw");
         wrist_vertical  = hardwareMap.get(Servo.class, "servo_vertical");
@@ -224,7 +224,7 @@ public class SpecimenRight extends OpMode
         drivegyro(0,47,33,0.4,0.01,3,true,defalt_small_num);
         rotate(5,0.2);
         drivegyro(0,0,100,0.4,0.01,4,true,defalt_small_num);
-        drivegyro(0,26,0,0.3,0.01,2,true,defalt_small_num);
+        drivegyro(0,24,0,0.3,0.01,2,true,defalt_small_num);
         drivegyro(0,0,-130,0.4,0.01,5,true,defalt_small_num);
         drivegyro(0,0,130,0.4,0.01,5,true,defalt_small_num);
         drivegyro(0,24,0,0.3,0.01,2,true,defalt_small_num);
@@ -532,7 +532,7 @@ public class SpecimenRight extends OpMode
         armMotor.setTargetPosition((int)(armPos));
         telemetry.addLine("armMotor:"+armMotor.getTargetPosition());
         //set motor velocity
-        ((DcMotorEx) armMotor).setVelocity(4000);
+        ((DcMotorEx) armMotor).setVelocity(4750);
         //run arm motor to position
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         //telemetry if motor exceeded current limit

@@ -219,7 +219,7 @@ public class Basket extends OpMode
         waitForTime(2);
         //drop
         clawSpeed=claw_DEPOSIT;
-        waitForTime(1.5);
+        waitForTime(1);
         //reset arm
         armPosition=1000;
         linearPos=100;
@@ -228,36 +228,36 @@ public class Basket extends OpMode
         wrist_verticalPosition=wrist_vertical_FOLDED_IN;
         //rotate + drive to collect
         rotate(-135, 0.5);
-        drivegyro(0,8.5,12,0.3,0.01,3,true,defalt_small_num);
+        drivegyro(0,9.75,14.5,0.3,0.01,3,true,10);
         //collect
         armPosition=4573;
         wrist_verticalPosition=0.8;
         wrist_horizontalPosition=0.35;
-        waitForTime(2.75);
+        waitForTime(2.15);
         clawSpeed=claw_COLLECT;
         waitForTime(0.5);
         //reset
         armPosition=1000;
         wrist_verticalPosition=1;
         //back to basket
-        drivegyro(0,-10,-5,0.4,0.01,3,false,defalt_small_num);
+        drivegyro(0,-7,-5,0.4,0.01,3,false,defalt_small_num);
         rotate(135,0.5);
         //drop
-        linearPos=2240;
+        linearPos=2770;
         waitForTime(1.5);
         wrist_verticalPosition=0.8;
         wrist_horizontalPosition=0.35;
         armPosition=2650;
-        waitForTime(2);
+        waitForTime(1.75);
         clawSpeed=claw_DEPOSIT;
-        waitForTime(1.5);
+        waitForTime(1.25);
         //reset
         armPosition=1180;
         linearPos=100;
         wrist_verticalPosition=0.6;
         wrist_horizontalPosition=1;
         clawSpeed=claw_COLLECT;
-        drivegyro(0,78,-108,0.75,0.01,5,false,25);
+        drivegyro(0,78,-108,0.75,0.01,5,false,30);
         rotate(-30,0.7);
         drivegyro(0,-10,-50,-1,0.01,3,false,25);
         armPosition=1150;
