@@ -81,7 +81,7 @@ class Imu{
     }
     /**
      * Get robot x and y acceleration
-     * @return Length 2 double arraw with acceleration as (x,y)
+     * @return Length 2 double list with acceleration as (x,y)
      */
     protected double[] getAcceleration(){
         double[] acceleration=new double[2];
@@ -111,12 +111,49 @@ class Drivetrain{
     }
 }
 /**
- * Main robot class
+ * Main robot drivetrain class
  */
-class Robot{
+class Robot_Drivetrain{
     //robot location information, relative to left-bottom corner of field(0,0).
     //0 degrees theta is facing positive y direction.
     protected double xPos=0;
     protected double yPos=0;
     protected double theta=0;
+    protected Imu imu=new Imu();
+    protected Drivetrain drivetrain=new Drivetrain();
+    /**
+     * Initialize drivetrain and IMU objects, change IMU orientation here
+     * @param motors Array of drivetrain DcMotor objects(0 is left front, 1 is left rear, 2 is right rear, 3 is right front)
+     * @param imu IMU object
+     */
+    protected void initiateRobotParts(DcMotor[] motors, IMU imu){
+        this.drivetrain.setDrivetrain(motors);
+        this.imu.setIMU(imu);
+        //set the orientation of the REV hub on the robot(the IMU location is on one of the corners of the robot)
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+    }
+    /**
+     * Initialize robot position
+     * @param xPos Robot x position relative to left-bottom of field
+     * @param yPos Robot y position relative to left-bottom of field
+     * @param theta Robot orientation relative to positive y direction
+     */
+    protected void initiateRobotPosition(double xPos, double yPos, double theta){
+        this.xPos=xPos;
+        this.yPos=yPos;
+        this.theta=theta;
+    }
+    /**
+     * Update robot position using IMU
+     * @return Updated coordinates in an array [xPos, yPos, theta]
+     */
+    protected double[] updatePos(){
+        double[] coordChange=this.imu.getAcceleration();
+        this.xPos+=coordChange[0];
+        this.yPos+=coordChange[1];
+        this.theta=this.imu.getHeading();
+        return new double[]{this.xPos,this.yPos,this.theta};
+    }
 }
