@@ -57,7 +57,6 @@ class Motor{
  */
 class Imu{
     protected IMU imu_=null;
-    protected double secondsToUpdate=0.5;
     /**
      * Set IMU
      * @param imu IMU object
@@ -81,7 +80,7 @@ class Imu{
     }
     /**
      * Get robot x and y acceleration
-     * @return Length 2 double list with acceleration as (x,y)
+     * @return Length 2 double list with acceleration as [x,y]
      */
     protected double[] getAcceleration(){
         double[] acceleration=new double[2];
@@ -119,6 +118,14 @@ class Robot_Drivetrain{
     protected double xPos=0;
     protected double yPos=0;
     protected double theta=0;
+    protected double xVel=0;
+    protected double yVel=0;
+    //seconds to update robot location via IMU
+    protected double secondsToUpdate=0.5;
+    //Seconds to wait for verifying robot location data via external sensors, TO BE IMPLEMENTED
+    protected double secondsToVerification=5;
+    protected ElapsedTime timer=new ElapsedTime();
+    //imu and drivetrain
     protected Imu imu=new Imu();
     protected Drivetrain drivetrain=new Drivetrain();
     /**
@@ -146,14 +153,39 @@ class Robot_Drivetrain{
         this.theta=theta;
     }
     /**
+     * Update robot x&y velocity values using IMU, also updates theta
+     * @return Updated velocities as [x velocity, y velocity]
+     */
+    protected double[] updateVelocity(){
+        this.theta=this.imu.getHeading();
+        double[] acceleration=this.imu.getAcceleration();
+        //robot-centric x velocity
+        double RCxVel=acceleration[0]*this.secondsToUpdate;
+        //robot-centric y velocity
+        double RCyVel=acceleration[1]*this.secondsToUpdate;
+        //calculate degrees of rotation based on theta(in rotation matrix, theta is angle of rotation in counterclockwise direction, in degrees)
+        double rotationTheta=0;
+        if (this.theta<0){
+            rotationTheta=180+Math.abs(this.theta);
+        }
+        else{
+            rotationTheta=this.theta;
+        }
+        rotationTheta=360-rotationTheta;
+        //rotation matrix conversion to field-centric
+        double tempxVel=RCxVel*Math.cos(Math.toRadians(rotationTheta))-RCyVel*Math.sin(Math.toRadians(rotationTheta));
+        double tempyVel=RCxVel*Math.sin(Math.toRadians(rotationTheta))+RCyVel*Math.cos(Math.toRadians(rotationTheta));
+        this.xVel=tempxVel;
+        this.yVel=tempyVel;
+        return new double[]{this.xVel, this.yVel};
+    }
+    /**
      * Update robot position using IMU
      * @return Updated coordinates in an array [xPos, yPos, theta]
      */
     protected double[] updatePos(){
         double[] coordChange=this.imu.getAcceleration();
-        this.xPos+=coordChange[0];
-        this.yPos+=coordChange[1];
-        this.theta=this.imu.getHeading();
+        //use rotation matrix to rotate acceleration to field-centric coordinates
         return new double[]{this.xPos,this.yPos,this.theta};
     }
 }
