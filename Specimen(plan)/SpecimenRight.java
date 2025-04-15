@@ -249,7 +249,7 @@ public class SpecimenRight extends OpMode
     /**
      * Rotates the robot about itself a specified degrees.
      * @param twist Degrees to rotate(negative->clockwise,positive->counterclockwise)
-     * @param speed
+     * @param speed Speed of rotation
      */
     public void rotate(double twist,double speed){
         double targetdirection=getHeading()+twist;
@@ -472,7 +472,6 @@ public class SpecimenRight extends OpMode
      * robot movement to wheel movement
      * @param xDistance is x coordinate change
      * @param yDistance is y coordinate change
-     * @param turnAngle is angle of turn
      * @return double list of leftFront wheel movement, rightFront wheel movement, leftRear wheel movement, rightRear wheel movement, in encoder ticks
      */
     public static double[] calculateWheelMovement(double xDistance, double yDistance) {
