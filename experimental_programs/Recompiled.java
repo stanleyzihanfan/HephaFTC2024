@@ -246,12 +246,15 @@ class Robot_Drivetrain {
      * @param drive is how far forwards
      * @param max_speed is max velocity of motor
      * @param acceleration is how fast motor accelerates
-     * @return none
      */
     protected void drivegyro(double strafe, double drive, double max_speed, double acceleration){
+        //expected time for motor to finish drive
         double[] drivetimes = new double[4];
+        //maximum drive time
         double maxtime=0;
+        //distance motor travels
         double[] distance;
+        //expectec time it should take for the motor to accelerate to max speed
         double timetoMax=max_speed/acceleration;
         //get wheel targets
         distance=calculateWheelMovement(strafe,drive);
@@ -274,21 +277,29 @@ class Robot_Drivetrain {
         double epsilon=0.005;
         this.timer.reset();
         while (this.timer.time()<=maxtime){
+            //iterate motors
             for (int i=0;i<4;i++){
+                //swap from accel to constant speed drive
                 if (this.drivetrain.drivetrain[i].velocity>=this.drivetrain.drivetrain[i].maxspeed && this.drivetrain.drivetrain[i].motorState==1)
                     this.drivetrain.drivetrain[i].motorState = 0;
+                //swap from constant speed to decel
                 else if (this.timer.time()>=(maxtime-this.drivetrain.drivetrain[i].maxspeed/acceleration) && this.drivetrain.drivetrain[i].motorState==0)
                     this.drivetrain.drivetrain[i].motorState = 2;
+                //change acceleration when accel/decel
                 if ((this.timer.time() % 1) <= epsilon){
                     if (this.drivetrain.drivetrain[i].motorState==2)
                         this.drivetrain.drivetrain[i].velocity -= acceleration;
                     else if (this.drivetrain.drivetrain[i].motorState==1)
                         this.drivetrain.drivetrain[i].velocity += acceleration;
                 }
+                //apply velocity to motor
                 this.drivetrain.drivetrain[i].motor_.setVelocity(this.drivetrain.drivetrain[i].velocity);
             }
         }
+        //reset motors to 0 speed(a.k.a stop)
         for (int i=0;i<4;i++) {
+            this.drivetrain.drivetrain[i].velocity=0;
+            this.drivetrain.drivetrain[i].motor_.setVelocity(this.drivetrain.drivetrain[i].velocity);
             this.drivetrain.drivetrain[i].motorState=0;
         }
     }
